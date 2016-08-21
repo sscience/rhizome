@@ -101,7 +101,7 @@ WSGI_APPLICATION = 'rhizome.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME', 'rhizome'),
+        'NAME': os.getenv('DB_NAME', 'rh_global'),
         'USER': os.getenv('DB_USER', 'djangoapp'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'w3b@p01i0'),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
@@ -186,3 +186,5 @@ LOGO_ALT = os.getenv('LOGO_ALT', 'Rhizome')
 FLAG_SOP = True
 FLAG_C4D = False
 FLAG_DATA = True
+
+COUNTRY_LIST = ['gw','gu','gt','gr','gq','gy','ge','gd','gb','ga','gn','gm','gl','gh','lb','lc','la','tw','tt','tr','lk','li','lv','tl','lu','lr','ls','th','tf','tg','td','ly','do','dm','dj','dk','de','ye','dz','uy','vu','qa','tm','eh','wf','ee','eg','za','ec','us','et','zw','es','er','ru','rw','rs','it','ro','bd','be','bf','bg','ba','bb','jp','bn','bo','bh','bi','bj','bt','jm','bw','ws','br','bs','tz','by','bz','om','zm','ua','jo','mz','ck','ci','ch','co','cn','cm','cl','ca','cg','cf','cd','cz','cy','cr','cv','cu','ve','pr','tn','pw','pt','py','lt','pa','pg','pe','pk','ph','pl','hr','ht','hu','hn','vn','me','md','mg','ma','mc','uz','mm','ml','mn','mk','mu','mt','mw','mp','mr','ug','my','mx','il','vc','ae','ad','ag','af','iq','vi','is','ir','am','al','ao','kn','as','ar','au','at','in','az','ie','id','ni','nl','no','na','nc','ne','ng','nz','np','so','nr','sn','fr','sb','fi','fj','fo','tj','sz','sy','sx','kg','ke','ss','sr','kh','sv','km','st','sk','kr','si','kp','kw','kv','sm','sl','sc','kz','sa','sg','se','sd']

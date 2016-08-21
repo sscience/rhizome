@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from django.db import migrations
@@ -10,26 +9,16 @@ from rhizome.models.campaign_models import Campaign
 from rhizome.models.document_models import Document, DocumentDetail,\
     DocDetailType
 
-def populate_source_data(apps, schema_editor):
-    '''
-    Here, we take an excel file that has the same schema as the database
-    we lookup the approriate model and bulk insert.
+def populate_source_data(app_label, schema_editor):
 
-    We need to ingest the data itself in the same order as the excel
-    sheet otherwise we will have foreign key constraint issues.
-    '''
-    pass
-
-    # xl = pd.ExcelFile('initial_data.xlsx')
-    # all_sheets = xl.sheet_names
-    # source_data_sheets = [s for s in all_sheets if s.startswith('source-data_')]
-    #
-    # for s in source_data_sheets:
-    #     source_sheet_df = xl.parse(s)
-    #     process_source_sheet(source_sheet_df, s)
-
+    sheet_name = 'fake_refugee_data'
+    source_sheet_df = pd.read_csv('migration_data/%s.csv' % sheet_name)
+    process_source_sheet(source_sheet_df, sheet_name)
 
 def process_source_sheet(source_sheet_df, sheet_name):
+
+    user_id = -1
+
     # file_loc = settings.MEDIA_ROOT + sheet_name
     saved_csv_file_location = settings.MEDIA_ROOT + sheet_name + '.csv'
     source_sheet_df.to_csv(saved_csv_file_location)
@@ -44,14 +33,16 @@ def process_source_sheet(source_sheet_df, sheet_name):
     create_doc_details(new_doc.id)
 
     ## document -> source_submissions ##
-    new_doc.transform_upload()
+    dt = DateDocTransform(user_id, new_doc.id)
+    dt.main()
 
     ## source_submissions -> datapoints ##
-    new_doc.refresh_master()
+    mr = MasterRefresh(user_id, new_doc.id)
+    mr.main()
 
     ## datapoints -> computed datapoints ##
-    for c in Campaign.objects.all():
-        c.aggregate_and_calculate()
+    ar = AggRefresh()
+
 
 def create_doc_details(doc_id):
 
@@ -65,6 +56,8 @@ def create_doc_details(doc_id):
             # are named with the above convention
         )
 
+    ## note -- in a proper implemtation, these columns are matched in the
+    ## user interface so the user tells the system, which is the date columns
 
 class Migration(migrations.Migration):
 

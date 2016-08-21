@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os
+import urllib2
+import json
 
 from django.db.models import get_app, get_models
-from django.db import models, migrations
+from django.db import models, migrations, IntegrityError, transaction
 import pandas as pd
 
-from rhizome.models.location_models import Location, LocationPolygon
+from rhizome.models.location_models import Location, LocationPolygon,\
+    LocationType
 from rhizome.models.document_models import Document
 from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 
+from django.conf import settings
 
 def populate_initial_data(apps, schema_editor):
     '''
@@ -17,18 +22,26 @@ def populate_initial_data(apps, schema_editor):
 
     We need to ingest the data itself in the same order as the excel
     sheet otherwise we will have foreign key constraint issues.
-
-    Here we also greate a document for "data entry" so that we source all
-    information entered via data entry to this id.
     '''
 
-    new_doc = Document.objects.create(
-        doc_title='Data Entry'
-    )
-
-    process_meta_data()
     process_geo_json()
+    process_meta_data()
 
+    ## there is a bug in the front end such that some charts will not load
+    ## if there is not a campaign created in the DB.. so ....
+    add_place_holder_campaign()
+
+def add_place_holder_campaign():
+
+    ct = CampaignType.objects.create(name = 'placeholder')
+    c = Campaign.objects.create(
+        name = 'Placeholder',
+        campaign_type_id = ct.id,
+        top_lvl_location_id = Location.objects.filter(parent_location_id= None)[0].id,
+        top_lvl_indicator_tag_id = IndicatorTag.objects.all()[0].id,
+        start_date = '2016-01-01',
+        end_date = '2016-01-01'
+    )
 
 def process_meta_data():
 
@@ -66,21 +79,89 @@ def process_meta_data():
     ltc = LocationTreeCache()
     ltc.main()
 
-
 def process_geo_json():
+    '''
+    Depending on the values put in the COUNTRY_LIST, we pull shapes from
+    The highcharts map repository.  This will give us shapes for admin level 1
+    for the countries we specify.
+    '''
 
-    try:
-        geo_json_df = pd.read_csv('geo_json.txt', delimiter="|")
-    except IOError:
-        return
-
-    geo_json_df = pd.read_csv('geo_json.txt', delimiter="|")
-    location_df = pd.DataFrame(list(Location.objects.all()
-                                    .values_list('id', 'location_code')), columns=['location_id', 'location_code'])
-    merged_df = location_df.merge(geo_json_df)[['location_id', 'geo_json']]
-    model_df_to_data(merged_df, LocationPolygon)
+    HOST = 'http://rhizome.work/api/v1/'
+    for c in settings.COUNTRY_LIST:
+        create_country_meta_data(c)
 
     minify_geo_json()
+
+def create_country_meta_data(c):
+
+    json_file_name = 'migration_data/geo/{0}.json'.format(c)
+
+     # if this file has not already been saved, fetch it from the below url
+    if not os.path.isfile(json_file_name):
+        url = 'http://code.highcharts.com/mapdata/countries/{0}/{0}-all.geo.json'.format(c)
+        response = urllib2.urlopen(url)
+        data = json.loads(response.read())
+        with open(json_file_name, 'w+') as outfile:
+            json.dump(data, outfile)
+
+    # # create a dataframe where one rwo represents one shape #
+    # try:
+    #     with open(json_file_name) as data_file:
+    #         data = json.load(data_file)
+    #         features = data['features']
+    #         geo_json_df = pd.DataFrame(features)
+    # except IOError:
+    #     return
+    #
+    # # create the country and province location types #
+    # country_lt, created = LocationType.objects.get_or_create(
+    #     name = 'Country', admin_level = 0
+    # )
+    # province_lt, created = LocationType.objects.get_or_create(
+    #     name = 'Province', admin_level = 1
+    # )
+    #
+    # # create the top level country #
+    # country_loc_object = Location.objects.create(
+    #     name = c,
+    #     location_code = c,
+    #     location_type_id = country_lt.id
+    # )
+    #
+    # for ix, row in geo_json_df.iterrows():
+    #
+    #     process_geo_row(ix, row, country_loc_object, province_lt)
+
+def process_geo_row(ix, row, country_loc_object, province_lt):
+
+    # create the proivince location #
+    row_properties, row_geo = row.properties, row.geometry
+
+    print '---==---'
+    print row_properties
+
+    try:
+        province_dict = {
+            'name': row_properties['name'],
+            'parent_location_id': country_loc_object.id,
+            'location_code': row.id,
+            'location_type_id':province_lt.id
+        }
+    except KeyError: # not a location since it does not have name field
+        return ## for instance in gb.json -- {u'hc-group': u'__separator_lines__'}
+
+    try:
+        with transaction.atomic():
+            province_loc_object = Location.objects.create(**province_dict)
+    except IntegrityError as err:
+        alt_name = row_properties['woe-name']
+        province_dict['name'] = alt_name
+        province_loc_object = Location.objects.create(**province_dict)
+
+    # create the proivince shapes #
+    LocationPolygon.objects.create(
+        geo_json = row_geo, location_id = province_loc_object.id
+    )
 
 
 def model_df_to_data(model_df, model):
