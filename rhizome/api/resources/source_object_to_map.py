@@ -1,7 +1,5 @@
 from rhizome.api.resources.base_model import BaseModelResource
-from rhizome.models import Indicator, Location, Campaign
-from rhizome.models import SourceObjectMap, DocumentSourceObjectMap
-
+from rhizome.models.document_models import SourceObjectMap, DocumentSourceObjectMap
 
 class SourceObjectToMapResource(BaseModelResource):
     '''

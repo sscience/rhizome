@@ -9,7 +9,7 @@ from rhizome.models.location_models import Location, LocationPolygon
 from rhizome.models.document_models import Document
 from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 
-from rhizome.models import Location, LocationPolygon, LocationType, Office,\
+from rhizome.models.location_models import Location, LocationPolygon, LocationType, Office,\
     CampaignType, Campaign, IndicatorTag
 from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 

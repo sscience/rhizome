@@ -1,6 +1,6 @@
 from django.db import models, migrations
 
-from rhizome.models import Document
+from rhizome.models.document_models import Document
 
 
 def add_data_entry_document(apps, schema_editor):

@@ -8,10 +8,10 @@ from django.db.models import get_app, get_models
 import pandas as pd
 
 from rhizome.cache_meta import minify_geo_json, LocationTreeCache
-from rhizome.models import Location, LocationPolygon
-from rhizome.models import Document, DocumentDetail, DocDetailType
+from rhizome.models.location_models import Location, LocationPolygon
+from rhizome.models.document_models import Document, DocumentDetail, DocDetailType
 from rhizome.etl_tasks.transform_upload import DateDocTransform
-from rhizome.etl_tasks.refresh_master import MasterRefresh
+# from rhizome.etl_tasks.refresh_master import MasterRefresh
 from rhizome.agg_tasks import AggRefresh
 
 def populate_source_data(app_label, schema_editor):
