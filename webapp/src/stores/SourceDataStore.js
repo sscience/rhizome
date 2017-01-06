@@ -6,45 +6,53 @@ var SourceDataStore = Reflux.createStore({
 
   init: function () {
     var self = this
+    self.data = {}
 
-    self.data = {
-      docObj: null,
-      docTab: 'doc_index',
-      tableDef: this.getTableDef()
+    let currentPath = window.location.pathname
+    let cleanPath = currentPath.replace('/source-data/', '')
+    let urlParams = cleanPath.split('/')
+    let doc_tab = 'doc_index'
+    let doc_id = null
+
+
+    if (urlParams.length === 2) {
+      doc_tab = urlParams[0],
+      doc_id = urlParams[1],
+      this.getDocObj(doc_id)
     }
     self.trigger(self.data)
   },
 
   getInitialState () {
-    var initialState = {
-      tableDef: this.getTableDef(),
-      doc_id: null,
-      doc_tab: 'doc_index'
+    return {
+      tableDef: this.getTableDef()
     }
     return initialState
   },
 
-  onGetDocObj: function (doc_id) {
+  getDocObj: function (doc_id) {
     var self = this
-    api.source_doc({ id: doc_id }).then(function (response) {
+      api.source_doc({id: doc_id}).then(function (response) {
       self.data.doc_obj = response.objects[0]
+      self.data.file_type = response.objects[0].file_type
       self.trigger(self.data)
     })
   },
 
   getTableDef: function () {
+    var self = this
+
     return {
       'viewraw': {
-        'meta_fn': api.submissionMeta,
         'data_fn': api.submission,
-        'fields': ['id', 'location_code', 'campaign_code', 'edit_link'],
-        'header': ['id', 'location_code', 'campaign_code', 'edit_link'],
+        'fields': ['id', 'location_code', 'campaign_code', 'data_date', 'edit_link'],
+        'header': ['id', 'location_code', 'campaign_code', 'data_date', 'edit_link'],
         'search_fields': ['id', 'location_code', 'campaign_code']
       },
       'doc_index': {
         'data_fn': api.source_doc,
-        'fields': ['id', 'doc_title', 'created_at', 'edit_link'],
-        'header': ['id', 'doc_title', 'created_at', 'edit_link'],
+        'fields': ['id', 'doc_title','file_type', 'created_at', 'edit_link'],
+        'header': ['id', 'doc_title','file_type', 'created_at', 'edit_link'],
         'search_fields': ['id', 'doc_title']
       },
       'mapped': {
@@ -61,10 +69,16 @@ var SourceDataStore = Reflux.createStore({
         'header': ['content_type', 'source_object_code', 'master_object_name', 'edit_link'],
         'search_fields': ['content_type', 'source_object_code', 'master_object_name']
       },
-      'results': {
-        'data_fn': api.docResults,
-        'fields': ['indicator_id', 'indicator__short_name', 'location__name', 'campaign__name', 'value'],
-        'header': ['indicator_id', 'indicator__short_name', 'location__name', 'campaign__name', 'value'],
+      'date_results': {
+        'data_fn': api.dateDocResults,
+        'fields': ['indicator__id', 'indicator__short_name', 'location__name', 'data_date', 'value'],
+        'fields': ['indicator__id', 'indicator__short_name', 'location__name', 'data_date', 'value'],
+        'search_fields': ['indicator_id', 'indicator__short_name', 'location__name', 'campaign__name']
+      },
+      'campaign_results': {
+        'data_fn': api.campaignDocResults,
+        'fields': ['indicator__id', 'indicator__short_name', 'location__name', 'campaign__name', 'value'],
+        'fields': ['indicator__id', 'indicator__short_name', 'location__name', 'campaign__name', 'value'],
         'search_fields': ['indicator_id', 'indicator__short_name', 'location__name', 'campaign__name']
       }
       // 'errors': {

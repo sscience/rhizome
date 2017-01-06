@@ -1,12 +1,10 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
-from rhizome.models import CampaignType
-from rhizome.models import DocDataPoint
-from rhizome.models import Document
-from rhizome.models import IndicatorTag
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
+from rhizome.models.campaign_models import CampaignType
+from rhizome.models.indicator_models import IndicatorTag
+from rhizome.models.datapoint_models import Document, DocDataPoint
 
-
-class DocDataPointResourceTest(RhizomeAPITestCase):
+class DocDataPointResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
 
@@ -15,10 +13,8 @@ class DocDataPointResourceTest(RhizomeAPITestCase):
 
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
         self.top_lvl_location = self.ts.create_arbitrary_location(
             self.lt.id,
-            self.o.id,
             location_code='Nigeria',
             location_name='Nigeria')
 
@@ -27,7 +23,7 @@ class DocDataPointResourceTest(RhizomeAPITestCase):
         camp_type = CampaignType.objects.create(name="test")
         ind_tag = IndicatorTag.objects.create(tag_name="tag")
         campaign = self.ts.create_arbitrary_campaign(
-            self.o.id, camp_type.id, self.top_lvl_location.id, ind_tag.id)
+            camp_type.id, self.top_lvl_location.id, ind_tag.id)
         ind = self.ts.create_arbitrary_indicator()
         value = 1123
         doc_dp = DocDataPoint.objects.create(document_id=doc.id,
@@ -49,7 +45,7 @@ class DocDataPointResourceTest(RhizomeAPITestCase):
         camp_type = CampaignType.objects.create(name="test")
         ind_tag = IndicatorTag.objects.create(tag_name="tag")
         campaign = self.ts.create_arbitrary_campaign(
-            self.o.id, camp_type.id, self.top_lvl_location.id, ind_tag.id)
+            camp_type.id, self.top_lvl_location.id, ind_tag.id)
         ind = self.ts.create_arbitrary_indicator()
         value = 1123
         doc_dp = DocDataPoint.objects.create(document_id=doc.id,
@@ -64,12 +60,16 @@ class DocDataPointResourceTest(RhizomeAPITestCase):
         self.deserialize(resp)
         self.assertHttpApplicationError(resp)
 
-    def test_doc_dp_get_invalid_id(self):
+    def test_doc_dp_get_invalid_document_id(self):
+        '''
+        Here we pass a bogus document_id to the API and ensure we do not
+        receive any objects back from this query.
+        '''
         doc = Document.objects.create(doc_title="test")
         camp_type = CampaignType.objects.create(name="test")
         ind_tag = IndicatorTag.objects.create(tag_name="tag")
         campaign = self.ts.create_arbitrary_campaign(
-            self.o.id, camp_type.id, self.top_lvl_location.id, ind_tag.id)
+            camp_type.id, self.top_lvl_location.id, ind_tag.id)
         ind = self.ts.create_arbitrary_indicator()
         value = 1123
         doc_dp = DocDataPoint.objects.create(document_id=doc.id,

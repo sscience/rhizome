@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import os
-import urllib2
-import json
-
-from django.db import models, migrations
-from django.conf import settings
 from django.db.models import get_app, get_models
-import django.db.models.deletion
-
-import jsonfield.fields
+from django.db import models, migrations
 import pandas as pd
+
+from rhizome.models.location_models import Location, LocationPolygon
+from rhizome.models.document_models import Document
+from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 
 from rhizome.models import Location, LocationPolygon, LocationType, Office,\
     CampaignType, Campaign, IndicatorTag
@@ -24,8 +20,16 @@ def populate_initial_data(apps, schema_editor):
 
     We need to ingest the data itself in the same order as the excel
     sheet otherwise we will have foreign key constraint issues.
+
+    Here we also greate a document for "data entry" so that we source all
+    information entered via data entry to this id.
     '''
 
+    new_doc = Document.objects.create(
+        doc_title='Data Entry'
+    )
+
+    process_meta_data()
     process_geo_json()
     process_meta_data()
 

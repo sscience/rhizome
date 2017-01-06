@@ -1,11 +1,7 @@
 from tastypie.resources import ALL
 
 from rhizome.api.resources.base_model import BaseModelResource
-from rhizome.api.exceptions import DatapointsException
-from rhizome.models import CustomDashboard, CustomChart
-
-import json
-
+from rhizome.models.dashboard_models import CustomDashboard, CustomChart
 
 class CustomDashboardResource(BaseModelResource):
     '''
@@ -23,23 +19,36 @@ class CustomDashboardResource(BaseModelResource):
             If a title is not supplied. The API will return a 500 error.
     **DELETE Requests:** There are two ways to submit a delete request to API
         - to delete a resource, HTTP delete request to /api/v1/custom_dashboard/<dashboard_id>/
-        - or delete request to /api/v1/custom_dashboard/ with param 'id'
     '''
     class Meta(BaseModelResource.Meta):
+        object_class = CustomDashboard
         resource_name = 'custom_dashboard'
         filtering = {
             "id": ALL,
         }
         always_return_data = True
+        required_fields_for_post = ['title']
 
     def get_detail(self, request, **kwargs):
+        '''
+        This method gives the chart data for each dashboard so that we can
+        see all of the information needed to render a dashboard by accessing
+        that uri.
+
+        The custom dashboard model stores on it "rows" each of wiht have a
+        "layout" and a number of chart_uuids.
+
+        In this method, we iterate through the chart_uuids and add the chart
+        objects to the response.
+
+        Since this is not a simple matter of just hitting the database for
+        an ID, and returning that object, we override the "get_detail" method
+        here to return the related information for the resource.
+        '''
 
         requested_id = kwargs['pk']
-
         bundle = self.build_bundle(request=request)
-
         response_data = CustomDashboard.objects.get(id=requested_id).__dict__
-
         response_data.pop('_state')
 
         if response_data['rows']:
@@ -55,6 +64,7 @@ class CustomDashboardResource(BaseModelResource):
                 chart_dict = chart.__dict__
                 chart_dict.pop('_state')
                 charts_dict[chart.uuid] = chart_dict
+
             # add the charts to the row in the response
             for idx, row in enumerate(response_data_rows):
                 charts_list = row['charts']
@@ -62,64 +72,8 @@ class CustomDashboardResource(BaseModelResource):
                     if chart_uuid in charts_dict.keys():
                         chart = charts_dict[chart_uuid]
                         response_data_rows[idx]['charts'][idx2] = chart
+
             response_data['rows'] = response_data_rows
+
         bundle.data = response_data
         return self.create_response(request, bundle)
-
-    def obj_create(self, bundle, **kwargs):
-
-        post_data = bundle.data
-        bundle.request.user.id
-
-        try:
-            dash_id = int(post_data['id'])
-        except KeyError:
-            dash_id = None
-
-        title = post_data['title']
-
-        try:
-            description = post_data['description']
-        except KeyError:
-            description = ''
-
-        try:
-            layout = int(post_data['layout'])
-        except KeyError:
-            layout = 0
-
-        try:
-            rows = json.loads(post_data['rows'])
-        except KeyError:
-            rows = None
-
-        defaults = {
-            'id': dash_id,
-            'title': title,
-            'description': description,
-            'layout': layout,
-            'rows': rows
-        }
-
-        if(CustomDashboard.objects.filter(title=title).count() > 0 and (dash_id is None)):
-            raise DatapointsException(
-                'the custom dashboard "{0}" already exists'.format(title))
-        dashboard, created = CustomDashboard.objects.update_or_create(
-            id=dash_id, defaults=defaults)
-        bundle.obj = dashboard
-        bundle.data['id'] = dashboard.id
-        return bundle
-
-    def obj_delete_list(self, bundle, **kwargs):
-        obj_id = int(bundle.request.GET[u'id'])
-        CustomDashboard.objects.get(id=obj_id).delete()
-
-    def obj_delete(self, bundle, **kwargs):
-        CustomDashboard.objects.get(id=kwargs['pk']).delete()
-
-    def get_object_list(self, request):
-        if 'id' in request.GET:
-            dash_id = request.GET['id']
-            return CustomDashboard.objects.filter(id=dash_id).values()
-        else:
-            return CustomDashboard.objects.all().values()

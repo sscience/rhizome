@@ -1,19 +1,17 @@
-from base_test_case import RhizomeAPITestCase
-from rhizome.models import CampaignType
-from setup_helpers import TestSetupHelpers
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.models.campaign_models import CampaignType
+from rhizome.tests.setup_helpers import TestSetupHelpers
 
 
-class CampaignTypeResourceTest(RhizomeAPITestCase):
+class CampaignTypeResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(CampaignTypeResourceTest, self).setUp()
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
 
         self.top_lvl_location = self.ts.create_arbitrary_location(
             self.lt.id,
-            self.o.id,
             location_code='Nigeria',
             location_name='Nigeria')
 

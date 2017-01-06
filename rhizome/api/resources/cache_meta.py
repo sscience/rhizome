@@ -1,14 +1,13 @@
-from rhizome.api.resources.base_model import BaseModelResource
-from rhizome.models import Office
+from rhizome.api.resources.base_non_model import BaseNonModelResource
 from rhizome.cache_meta import cache_all_meta
+from rhizome.models.campaign_models import Campaign
 
 
-class CacheMetaResource(BaseModelResource):
+class CacheMetaResource(BaseNonModelResource):
 
-    def get_object_list(self, request):
-        cache_all_meta()
-
-        return Office.objects.all().values()
-
-    class Meta(BaseModelResource.Meta):
+    class Meta(BaseNonModelResource.Meta):
         resource_name = 'cache_meta'
+        queryset = Campaign.objects.all().values()
+
+    def pre_process_data(self, request):
+        cache_all_meta()

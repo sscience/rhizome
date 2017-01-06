@@ -356,6 +356,26 @@ function tagTree (q) {
   })
 }
 
+function docMapped (q) {
+  var fetch = endPoint('/source_object_map/')
+  q['is_mapped'] = 1
+  return new Promise(function (fulfill, reject) {
+    fetch(q, null, {'cache-control': 'no-cache'}).then(function (data) {
+      fulfill(data)
+    }, reject)
+  })
+}
+
+function docToMap (q) {
+  var fetch = endPoint('/source_object_map/')
+  q['is_mapped'] = 0
+  return new Promise(function (fulfill, reject) {
+    fetch(q, null, {'cache-control': 'no-cache'}).then(function (data) {
+      fulfill(data)
+    }, reject)
+  })
+}
+
 export default {
   endPoint,
   // CUSTOM GET REQUESTS -> MANIPULATED BY JS //
@@ -364,14 +384,15 @@ export default {
   indicatorsTree: indicatorsTree,
   tagTree: tagTree,
   buildIndicatorsTree: buildIndicatorsTree,
+  docMapped: docMapped,
+  docToMap: docToMap,
 
   // BASIC GET REQUESTS //
   campaign: endPoint('/campaign/', 'get', 1),
   campaign_type: endPoint('/campaign_type/', 'get', 1),
   locations: endPoint('/location/', 'get', 1),
-  datapointsRaw: endPoint('/datapointentry/', 'get', 1),
+
   indicators: endPoint('/indicator/', 'get', 1),
-  office: endPoint('/office/', 'get', 1),
   homepage: endPoint('/homepage/', 'get', 1),
   location_type: endPoint('/location_type/', 'get', 1),
   post_indicator: endPoint('/indicator/', 'post', 1),
@@ -406,17 +427,15 @@ export default {
   source_doc: endPoint('/source_doc/', 'get', 1),
   submission: endPoint('/source_submission/', 'get', 1, false),
   docDetail: endPoint('/doc_detail/', 'get', 1, false),
-  docMapped: endPoint('/source_object_map/', 'get', 1, false),
-  docToMap: endPoint('/source_object_to_map/', 'get', 1, false),
   docDatapoint: endPoint('/doc_datapoint/', 'get', 1, false),
-  docResults: endPoint('/computed_datapoint/', 'get', 1, false),
+  dateDocResults: endPoint('/date_doc_result/', 'get', 1, false),
+  campaignDocResults: endPoint('/campaign_doc_result/', 'get', 1, false),
   docDetailType: endPoint('/doc_detail_type/', 'get', 1, false),
   transformUpload: endPoint('/transform_upload/', 'get', 1, false),
 
   // POST //
   docDetailPost: endPoint('/doc_detail/', 'post'),
   uploadPost: endPoint('/source_doc/', 'post'),
-  datapointUpsert: endPoint('/datapointentry/', 'post'),
   save_dashboard: endPoint('/custom_dashboard/', 'post', 1),
   post_campaign: endPoint('/campaign/', 'post', 1),
   remove_dashboard: emptyResponsePoint('/custom_dashboard', 'delete', 1, false),

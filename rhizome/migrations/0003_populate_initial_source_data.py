@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import jsonfield.fields
-import django.db.models.deletion
-from django.db import models, migrations
+from django.db import migrations
 from django.conf import settings
 from django.db.models import get_app, get_models
 
@@ -23,9 +21,6 @@ def populate_source_data(app_label, schema_editor):
     process_source_sheet(source_sheet_df, sheet_name)
 
 def process_source_sheet(source_sheet_df, sheet_name):
-
-    user_id = -1
-
     # file_loc = settings.MEDIA_ROOT + sheet_name
     saved_csv_file_location = settings.MEDIA_ROOT + sheet_name + '.csv'
     source_sheet_df.to_csv(saved_csv_file_location)
@@ -44,12 +39,11 @@ def process_source_sheet(source_sheet_df, sheet_name):
     dt.main()
 
     ## source_submissions -> datapoints ##
-    mr = MasterRefresh(user_id, new_doc.id)
-    mr.main()
+    new_doc.refresh_master()
 
     ## datapoints -> computed datapoints ##
-    ar = AggRefresh()
-
+    for c in Campaign.objects.all():
+        c.aggregate_and_calculate()
 
 def create_doc_details(doc_id):
 

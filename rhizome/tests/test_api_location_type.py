@@ -1,9 +1,9 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
-from rhizome.models import LocationType
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
+from rhizome.models.location_models import LocationType
 
 
-class LocationTypeResourceTest(RhizomeAPITestCase):
+class LocationTypeResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
 
@@ -12,10 +12,8 @@ class LocationTypeResourceTest(RhizomeAPITestCase):
 
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
         self.top_lvl_location = self.ts.create_arbitrary_location(
             self.lt.id,
-            self.o.id,
             location_code='Nigeria',
             location_name='Nigeria')
 

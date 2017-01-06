@@ -1,13 +1,8 @@
-from base_test_case import RhizomeAPITestCase
-from rhizome.models import CustomDashboard, CustomChart, LocationPermission,\
-    Location, LocationType, Office
-from setup_helpers import TestSetupHelpers
-import json
-from django.test import TestCase
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
 
-from pprint import pprint
 
-class AllMetaResourceTest(RhizomeAPITestCase):
+class AllMetaResourceTest(RhizomeApiTestCase):
         # ./manage.py test rhizome.tests.test_api_all_meta.AllMetaResourceTest --settings=rhizome.settings.test
 
     def setUp(self):
@@ -15,10 +10,8 @@ class AllMetaResourceTest(RhizomeAPITestCase):
 
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
         self.not_allowed_to_see_location = self.ts.create_arbitrary_location(
-            self.lt.id,
-            self.o.id)
+            self.lt.id)
 
     def test_all_meta_get(self):
         resp = self.ts.get(self, '/api/v1/all_meta/')

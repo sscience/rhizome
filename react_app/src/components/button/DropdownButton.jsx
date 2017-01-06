@@ -64,10 +64,15 @@ class DropdownButton extends Dropdown {
       item.value = item[this.props.value_field].toString()
       return item
     })
-    return menu_items.map(item => <ExpandableMenuItem key={item.value} depth={0} sendValue={this.props.sendValue} {...item} />)
+    return menu_items.map(item => <ExpandableMenuItem key={item.value} depth={0} sendValue={this._selectItem} {...item} />)
   }
 
-  _setPattern = (value) => {
+  _selectItem = value => {
+    this._toggleMenu()
+    this.props.sendValue(value)
+  }
+
+  _setPattern = value => {
     this.setState({ pattern: value })
   }
 
@@ -86,10 +91,9 @@ class DropdownButton extends Dropdown {
     }
 
     const icon = this.props.icon ? (<i className={['fa', this.props.icon].join(' ')} />) : null
-
     return (
       <button className={this.props.style} role='button' onClick={this._toggleMenu}>
-        {icon} {this.props.text}
+        {this.props.text} {icon}
       </button>
     )
   }

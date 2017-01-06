@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import React, { PropTypes } from 'react'
 import ResourceTable from 'components/molecules/ResourceTable'
+import Placeholder from 'components/global/Placeholder'
 
 const columnDefs = [
   {headerName: "ID", field: "id", suppressMenu: true},
@@ -11,22 +12,21 @@ const columnDefs = [
   {headerName: 'Created_at', field: 'created_at', hide: true},
   {headerName: 'Data_format', field: 'data_format', hide: true},
   {headerName: 'Bound_json', field: 'bound_json', hide: true},
-  {headerName: 'Office_id', field: 'office_id', hide: true},
   {headerName: 'Tag_json', field: 'tag_json', hide: true},
   {headerName: 'High_bound', field: 'high_bound', hide: true},
   {headerName: 'Low_bound', field: 'low_bound', hide: true},
   {headerName: 'Source_name', field: 'source_name', hide: true}
 ]
 
-const IndicatorTable = ({ indicators, fetchIndicators }) => {
-  return (
+const IndicatorTable = ({ indicators, getAllIndicators }) => {
+  return indicators.raw ? (
     <ResourceTable
-      rowData={_.toArray(indicators)}
-      onRefreshData={fetchIndicators}
+      rowData={indicators.raw}
+      onRefreshData={() => getAllIndicators()}
       columnDefs={columnDefs}
       resourcePath='indicators'
     />
-  )
+  ) : <Placeholder />
 }
 
 export default IndicatorTable

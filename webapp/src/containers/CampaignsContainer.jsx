@@ -26,9 +26,6 @@ var CampaignsContainer = React.createClass({
     this.setState({'campaignId': id})
     CampaignPageActions.initialize(id)
   },
-  _setOffice: function (event) {
-    CampaignPageActions.setOffice(event.target.value)
-  },
   _setCampaignName: function (event) {
     CampaignPageActions.setCampaignName(event.target.value)
   },
@@ -56,48 +53,10 @@ var CampaignsContainer = React.createClass({
         </div>)
     }
 
-    let officeSet = (
-      <div>
-        <label htmlFor='office'>Office: </label>
-        <select value={this.state.postData.office_id} onChange={this._setOffice}>
-          {this.state.offices.map(d => {
-            return d.id === this.state.postData.office_id
-              ? (<option value={d.id} selected>{d.name}</option>)
-              : (<option value={d.id}>{d.name}</option>)
-          })}
-        </select>
-      </div>
-    )
-
     let nameSet = (
       <div>
         <label htmlFor='name'>Name: </label>
         <input type='text' defaultValue={this.state.postData.name} onBlur={this._setCampaignName} ref='campaignName'/>
-      </div>
-    )
-
-    let topLevelLocationSet = (
-      <div>
-        <label htmlFor='top_lvl_location'>Top level location: </label>
-        <DropdownButton
-          items={this.state.locations}
-          sendValue={CampaignPageActions.setLocation}
-          item_plural_name='Locations'
-          text={this.state.locationSelected[0] && this.state.locationSelected[0].name || 'Select Location'}
-          icon='fa-globe'
-          uniqueOnly/>
-      </div>
-    )
-
-    let topLevelIndicatorTagSet = (
-      <div>
-        <label htmlFor='top_lvl_indicator_tag'>Top level indicator tag: </label>
-        <DropdownButton
-          items={this.state.indicatorToTags}
-          sendValue={this._setIndicatorTag}
-          item_plural_name='Indicator Tags'
-          text={this.state.tagSelected[0] && this.state.tagSelected[0].tag_name || 'Select Tag'}
-          icon='fa-tag'/>
       </div>
     )
 
@@ -145,10 +104,7 @@ var CampaignsContainer = React.createClass({
           <h2>Manage Campaign Page</h2>
           {message}
           <form>
-            {officeSet}
             {nameSet}
-            {topLevelLocationSet}
-            {topLevelIndicatorTagSet}
             {campaignTypeSet}
             {dateRangePicker}
             {submitButton}

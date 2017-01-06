@@ -9,13 +9,13 @@ export default class ResourceTable extends Component {
   constructor() {
     super()
     this.state = {
-      quickFilterText: null,
-      showToolPanel: false
+      quickFilterText: null
     }
   }
 
   static propTypes = {
     resourcePath: PropTypes.string.isRequired,
+    gridOptions: PropTypes.object,
     rowData: PropTypes.array.isRequired,
     columnDefs: PropTypes.array.isRequired
   }
@@ -36,10 +36,6 @@ export default class ResourceTable extends Component {
     this.columnApi = params.columnApi
   }
 
-  onToggleToolPanel = (event) => {
-    this.setState({showToolPanel: event.target.checked})
-  }
-
   onQuickFilterText = (event) => {
     this.setState({quickFilterText: event.target.value})
   }
@@ -49,7 +45,6 @@ export default class ResourceTable extends Component {
     return (
       <span>
         <a href={this.props.resourcePath + '/' + item.id}>Show</a> &nbsp;
-        <a href={this.props.resourcePath + '/' + item.id + '/edit'}>Edit</a>
       </span>
     )
   }
@@ -61,17 +56,15 @@ export default class ResourceTable extends Component {
   render = () => {
     this.columnDefs.push({headerName: 'Edit', cellRenderer: reactCellRendererFactory(this.renderControlCell)})
     return (
-      <div style={{width: '100vw'}}>
+      <div style={{width: '100vw'}} className={this.props.className}>
         <div style={{padding: '4px'}}>
           <TableControls
             onQuickFilterText={this.onQuickFilterText}
-            onToggleToolPanel={this.onToggleToolPanel}
             onRefreshData={this.props.onRefreshData} />
-          <div style={{height: 400}} className="ag-fresh">
+          <div className={'ag-fresh'} style={{height:'100%'}}>
             <AgGridReact
-              gridOptions={this.gridOptions}
+              gridOptions={this.props.gridOptions}
               onGridReady={this.onReady}
-              showToolPanel={this.state.showToolPanel}
               quickFilterText={this.state.quickFilterText}
               icons={this.icons}
               columnDefs={this.props.columnDefs}
@@ -82,7 +75,6 @@ export default class ResourceTable extends Component {
               enableFilter="true"
               groupHeaders="true"
               suppressCellSelection="true"
-              rowHeight="50"
               debug="false"/>
           </div>
         </div>

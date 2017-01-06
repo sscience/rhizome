@@ -1,133 +1,134 @@
-from pandas import DataFrame, concat, notnull
-from django.http import HttpResponse
-
-from tastypie import fields
-from tastypie.utils.mime import build_content_type
-
-from rhizome.api.serialize import CustomSerializer
 from rhizome.api.resources.base_model import BaseModelResource
-from rhizome.api.custom_logic import handle_polio_case_table
+from rhizome.models.campaign_models import Campaign, DataPointComputed
+from rhizome.api.serialize import CustomSerializer
 
-from rhizome.models import DataPointComputed, Campaign, Location,\
-    LocationPermission, LocationTree, IndicatorClassMap, Indicator, DataPoint, \
-    CalculatedIndicatorComponent
+from pandas import DataFrame, notnull
+import itertools
 
-import math
-
-class CampaignDatapointResource(BaseModelResource):
+class CampaignDataPointResource(BaseModelResource):
     '''
-    - **GET Requests:**
+    **GET Request** Returns computed datapoints for a given document
         - *Required Parameters:*
-            'indicator__in' A comma-separated list of indicator IDs to fetch. By default, all indicators
-            'chart_type'
-        - *Optional Parameters:*
-            'location__in' A comma-separated list of location IDs
-            'campaign_start' format: ``YYYY-MM-DD``  Include only datapoints from campaigns that began on or after the supplied date
-            'campaign_end' format: ``YYYY-MM-DD``  Include only datapoints from campaigns that ended on or before the supplied date
-            'campaign__in'   A comma-separated list of campaign IDs. Only datapoints attached to one of the listed campaigns will be returned
-            'cumulative'
+            'document_id'
+        - *Errors:*
+            Returns 200 code with an empty set of objects if the id is invalid, or an id is not specified
+    **POST Request** Create a computed datapoint
+        - *Required Parameters:*
+            'document_id', 'indicator_id', 'campaign_id', 'location_id', 'value'
+        - *Errors:*
+            Returns 500 error if information is missing.
+        - *To Note:*
+            The api does not validate any of these required parameters. It is possible to create datapoints with invalid campaign ids, etc.
+    **DELETE Request** Delete Detail: Delete a computed datapoint using the format '/api/v1/computed_datapoint/<datapoint_id>/'
     '''
 
     class Meta(BaseModelResource.Meta):
-        '''
-        '''
-
+        object_class = DataPointComputed
+        required_fields_for_post = ['campaign_id','indicator_id','value',\
+            'location_id']
         resource_name = 'campaign_datapoint'
-        max_limit = None
+        GET_params_required = ['indicator__in']
+        GET_fields = ['id', 'indicator_id', 'campaign_id', 'location_id',\
+            'value']
         serializer = CustomSerializer()
 
-    def __init__(self, *args, **kwargs):
-        '''
-        '''
-
-        super(CampaignDatapointResource, self).__init__(*args, **kwargs)
-
-    def get_list(self, request, **kwargs):
+    def apply_filters(self, request, applicable_filters):
         """
-        Overriden from Tastypie..
+        This is how we query the datapoint table
         """
 
-        base_bundle = self.build_bundle(request=request)
-        objects = self.obj_get_list(bundle=base_bundle)
+        filters = request.GET
 
-        response_meta = self.get_datapoint_response_meta(request, objects)
-        response_data = {
-            'objects': objects,
-            'meta': response_meta,
-            'error': None,
+        ## handle indicator filter ( it's required so assume the param exists )
+        self.indicator_id_list = filters.get('indicator__in', 0).split(',')
+
+        ## handle campeign logic ##
+        ## if campaign__in param passed, use those ids, else get from  start/end
+
+        self.campaign_id_list = filters.get('campaign__in', None)
+
+        if not self.campaign_id_list:
+            c_start = filters.get('campaign_start', '2000-01-01')
+            c_end = filters.get('campaign_end', '2070-01-01')
+
+            self.campaign_id_list = Campaign.objects.filter(
+                                start_date__gte=c_start,
+                                start_date__lte=c_end
+                            ).values_list('id', flat=True)
+        else:
+            self.campaign_id_list = self.campaign_id_list.split(',')
+
+        ## handle location logic ##
+        self.location_id_list = self.get_locations_to_return_from_url(request)
+
+        q_filters = {
+            'location_id__in': self.location_id_list,
+            'indicator_id__in': self.indicator_id_list,
+            'campaign_id__in': self.campaign_id_list
         }
 
-        return self.create_response(request, response_data)
+        objects_with_data = self.get_object_list(request).filter(**q_filters)
+        # return self.get_object_list(request).filter(**filters)
+        # FIXME hack to be fixed when we merge:
+        # https://github.com/unicef/rhizome/tree/feature/fe-handle-missing
 
-    def obj_get_list(self, bundle, **kwargs):
+        chart_type = filters.get('chart_type', None)
+        if chart_type and chart_type == 'ColumnChart':
+            objects = self.add_missing_data(objects_with_data)
+        else:
+            objects = objects_with_data
+
+        return objects
+
+    def add_missing_data(self, objects):
         '''
-        This is where the action happens in this resource.  AFter passing the
-        url paremeters, get the list of locations based on the parameters passed
-        in the url as well as the permissions granted to the user responsible
-        for the request.
-        Using the location_ids from the get_locations_to_return_from_url method
-        we query the datapoint abstracted table, then iterate through these
-        values cleaning the indicator_json based in the indicator_ids passed
-        in the url parameters, and creating a ResultObject for each row in the
-        response.
-        '''
+        In high charts ( our front end visualization module ) when we pass
+        data to a stacked / grouped bar chart, everything has to be in order,
+        meaning that if we have missing data, we have to pass the chart
+        an object that contains an object for each peice of missing data.
 
-        request = bundle.request
-        results = []
+        We are currently working on impementing the logic you see below into
+        the front end, but in order to get somethign working fo the TAG
+        meeting next week, instead of pushign forward on the front end
+        implmentatino which is in it's early stages.. I have put this piece of
+        code in to the campaign api so that the grouped bar charts
+        will render properly.
 
-        self.parsed_params = self.parse_url_params(request.GET)
-        self.location_ids = self.get_locations_to_return_from_url(request)
-
-        response_fields = ['id', 'indicator_id', 'campaign_id', 'location_id',\
-            'value']
-
-        results = list(DataPointComputed.objects.filter(
-                campaign__in=self.parsed_params['campaign__in'],
-                location__in=self.location_ids,
-                indicator__in=self.parsed_params['indicator__in'])\
-                .values(*response_fields))
-
-        ## fill in missing data if requested ##
-        if self.parsed_params['show_missing_data'] == u'1':
-            df = self.add_missing_data(DataFrame(results))
-            df = df.where((notnull(df)),None)
-            results = df.to_dict('records')
-
-        ## add enumeration for 'class' indicators
-        if 'class' in Indicator.objects\
-            .filter(id__in = self.parsed_params['indicator__in'])\
-            .values_list('data_format', flat=True):
-
-            self.class_indicator_map = self.build_class_indicator_map()
-            df = DataFrame(results).apply(self.add_class_indicator_val, axis=1)
-            results = df.to_dict('records')
-
-        return results
-
-    def build_class_indicator_map(self):
-        '''
-        '''
-        class_indicator_map ={}
-
-        indicator_enum_list = IndicatorClassMap.objects.filter(is_display=True) \
-            .values_list('indicator','enum_value','string_value')
-
-        for row in indicator_enum_list:
-            if row[0] not in class_indicator_map:
-                class_indicator_map[row[0]] ={}
-            class_indicator_map[row[0]][row[1]] = row[2]
-
-        return class_indicator_map
-
-    def add_class_indicator_val(self, x):
-        '''
+        For more informatino on this see: https://trello.com/c/euIwyOh4/9
         '''
 
-        ind_id = x['indicator_id']
-        ind_val = x['value']
+        ## build a data frame from the object list
+        df = DataFrame(list(objects))
 
-        if ind_id in self.class_indicator_map and ind_val in self.class_indicator_map[ind_id]:
-            new_val = self.class_indicator_map[ind_id][ind_val]
-            x['value'] = new_val
+        ## create a dataframe with all possible objects based on possble objects
+        list_of_lists = [df['location_id'].unique(), \
+            df['indicator_id'].unique(), df['campaign_id'].unique()]
+        cart_product = list(itertools.product(*list_of_lists))
+        columns_list = ['location_id','indicator_id', 'campaign_id']
+        cart_prod_df = DataFrame(cart_product, columns = columns_list)
 
-        return x
+        ## merge the two data frames, which will effectively fill in the missing
+        ## data giving obects a Null value if they did not exist in query result
+        df = df.merge(cart_prod_df, how='outer', on=columns_list)
+        non_null_df = df.where((notnull(df)), None)
+
+        ## create a list of dictionaries ( same structure as the input )
+        object_list = [row.to_dict() for ix, row in non_null_df.iterrows()]
+
+        return object_list
+
+
+    def get_response_meta(self, request, objects):
+
+        meta = super(BaseModelResource, self)\
+            .get_response_meta(request, objects)
+
+        chart_uuid = request.GET.get('chart_uuid', None)
+        if chart_uuid:
+            meta['chart_uuid'] = chart_uuid
+
+        meta['location_ids'] =  [int(x) for x in self.location_id_list]
+        meta['indicator_ids'] = [int(x) for x in self.indicator_id_list]
+        meta['campaign_ids'] = [int(x) for x in self.campaign_id_list]
+
+        return meta

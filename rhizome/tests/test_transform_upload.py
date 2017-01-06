@@ -3,13 +3,19 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from pandas import read_csv, notnull, to_datetime
 
-from rhizome.etl_tasks.transform_upload import ComplexDocTransform
-from rhizome.models import Document, Location, IndicatorTag, Office, CacheJob, DocDetailType, CampaignType, Campaign, Indicator, CalculatedIndicatorComponent, IndicatorToTag, DocumentDetail, SourceObjectMap, DataPoint, IndicatorClassMap
-from rhizome.etl_tasks.refresh_master import MasterRefresh
+from rhizome.models.campaign_models import CampaignType, Campaign
+from rhizome.models.location_models import Location
+from rhizome.models.indicator_models import Indicator, IndicatorTag,\
+    IndicatorToTag, CalculatedIndicatorComponent
+from rhizome.models.document_models import Document, DocDetailType, DocumentDetail,\
+    SourceObjectMap, DocumentDetail, SourceSubmission
 
+from rhizome.models.datapoint_models import DataPoint
 
 class TransformUploadTestCase(TestCase):
 
+    # ./manage.py test rhizome.tests.test_transform_upload.TransformUploadTestCase --settings=rhizome.settings.test
+    # ./manage.py test rhizome.tests.test_transform_upload.TransformUploadTestCase.test_doc_to_source_submission --settings=rhizome.settings.test
     def __init__(self, *args, **kwargs):
 
         super(TransformUploadTestCase, self).__init__(*args, **kwargs)
@@ -47,29 +53,32 @@ class TransformUploadTestCase(TestCase):
               those created in other documents)
             4. Inserting one record into submission_detail        '''
 
-        dt = ComplexDocTransform(self.user.id, self.document.id)
-
-        source_submissions = dt.process_file()
+        self.document.transform_upload()
+        source_submission_id_list = SourceSubmission.objects.filter(
+            document_id = self.document.id
+        )
 
         test_file = open(settings.MEDIA_ROOT + self.test_file_location, 'r')
         file_line_count = sum(1 for line in test_file) - 1  # for the header!
 
-        self.assertEqual(len(source_submissions), file_line_count)
+        self.assertEqual(len(source_submission_id_list), file_line_count)
 
     def test_missing_required_column(self):
+
         doc_id = self.ingest_file('missing_campaign.csv')
         try:
-            ComplexDocTransform(self.user.id, doc_id)
-            fail('should raise an exception')
+            document_object = Document.objects.get(id = doc_id)
+            document_object.transform_upload()
+            fail('This should should raise an exception')
         except Exception as err:
             self.assertEqual('campaign is a required column.', err.message)
 
     def test_duplicate_rows(self):
         doc_id = self.ingest_file('dupe_datapoints.csv')
-        dt = ComplexDocTransform(self.user.id, doc_id)
-        dt.main()
-        mr = MasterRefresh(self.user.id, doc_id)
-        mr.main()
+        document_object = Document.objects.get(id = doc_id)
+        document_object.transform_upload()
+        document_object.refresh_master()
+
         dps = DataPoint.objects.all()
         self.assertEqual(len(dps), 1)
         some_cell_value_from_the_file = 0.9029
@@ -79,80 +88,15 @@ class TransformUploadTestCase(TestCase):
     # and make sure that the value has been correctly converted
     def test_percent_vals(self):
         doc_id = self.ingest_file('percent_vals.csv')
-        ComplexDocTransform(self.user.id, doc_id).main()
-        MasterRefresh(self.user.id, doc_id).main()
+        document_object = Document.objects.get(id = doc_id)
+        document_object.transform_upload()
+        document_object.refresh_master()
         dps = DataPoint.objects.all()
         self.assertEqual(len(dps), 2)
         expected_dp_val = 0.8267
         dp = DataPoint.objects.get(
             indicator_id=self.mapped_indicator_with_data)
         self.assertEqual(expected_dp_val, dp.value)
-
-    def test_class_indicator_mapping(self):
-
-        lqas_indicator = Indicator.objects.create(
-            name='LQAS',
-            short_name='LQAS',
-            data_format='class'
-        )
-
-        mapping_1 = IndicatorClassMap.objects.create(
-            indicator=lqas_indicator,
-            string_value="High Pass",
-            enum_value=4,
-            is_display=True)
-
-        mapping_2 = IndicatorClassMap.objects.create(
-            indicator=lqas_indicator,
-            string_value="HP",
-            enum_value=4,
-            is_display=False)
-
-        lqas_som = SourceObjectMap.objects.create(
-            source_object_code='LQAS',
-            content_type='indicator',
-            mapped_by_id=self.user_id,
-            master_object_id=lqas_indicator.id
-        )
-
-        doc_id = self.ingest_file('class_indicator.csv')
-        ComplexDocTransform(self.user.id, doc_id).main()
-        MasterRefresh(self.user.id, doc_id).main()
-        dps = DataPoint.objects.all()
-        self.assertEqual(len(dps), 1)
-        self.assertEqual(dps[0].value, 4)
-
-    # def test_boolean_transform(self):
-
-    #     location_code_column = 'SettlementCode'
-    #     campaign_code_colum = 'DateOfReport'
-
-    #     input_df = read_csv('/Users/john/Downloads/vcm_birth_tracking_results.csv')
-    #     # input_df = read_csv('/Users/john/Desktop/vcm_bitrth_tracking_sample.csv')
-
-    #     cleaned_df = input_df\
-    #         [[location_code_column,campaign_code_colum,'VCM0Dose','VCMNameCAttended']]
-
-    #     bool_map = {'yes': 1, 'no': 0}
-
-    #     cleaned_df['VCM0Dose'] = cleaned_df['VCM0Dose'].map(bool_map)
-    #     cleaned_df['VCMNameCAttended'] = cleaned_df['VCMNameCAttended'].map(bool_map)
-
-    #     cleaned_df = cleaned_df.where((notnull(cleaned_df)), 0)
-
-    #     grouped_df = DataFrame(cleaned_df\
-    #         .groupby([location_code_column,campaign_code_colum])[['VCMNameCAttended','VCM0Dose']].sum())
-
-    #     print grouped_df
-
-    #     row_count_df = DataFrame(cleaned_df\
-    #         .groupby([location_code_column,campaign_code_colum])\
-    #         .count())[[location_code_column]]
-
-    #     final_df = grouped_df.merge(row_count_df,left_index=True,right_index=True)
-    #     final_df.rename(columns={location_code_column:'location_campaign_code_count'}, inplace=True)
-
-    #     return final_df
 
     def create_metadata(self):
         '''
@@ -163,8 +107,6 @@ class TransformUploadTestCase(TestCase):
         top_lvl_tag = IndicatorTag.objects.create(id=1, tag_name='Polio')
 
         campaign_df = read_csv('rhizome/tests/_data/campaigns.csv')
-        campaign_df['top_lvl_indicator_tag_id'] = top_lvl_tag.id
-
         campaign_df['start_date'] = to_datetime(campaign_df['start_date'])
         campaign_df['end_date'] = to_datetime(campaign_df['end_date'])
 
@@ -175,10 +117,6 @@ class TransformUploadTestCase(TestCase):
 
         user_id = User.objects.create_user('test', 'test@test.com', 'test').id
         self.user_id = user_id
-        office_id = Office.objects.create(id=1, name='test').id
-
-        cache_job_id = CacheJob.objects.create(id=-2,
-                                               date_attempted='2015-01-01', is_error=False)
 
         document_id = Document.objects.create(
             doc_title='test',
@@ -248,7 +186,7 @@ class TransformUploadTestCase(TestCase):
             mapped_by_id=user_id,
             master_object_id=self.mapped_campaign_id
         )
-        self.mapped_indicator_id_0 = self.locations[0].id
+        self.mapped_indicator_id_0 = self.indicators[0].id
         indicator_map = SourceObjectMap.objects.create(
             source_object_code='Percent missed children_PCA',
             content_type='indicator',

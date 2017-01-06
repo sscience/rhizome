@@ -1,18 +1,16 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
-from rhizome.models import Document, DocDetailType, DocumentDetail
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
+from rhizome.models.document_models import Document, DocDetailType,\
+    DocumentDetail
 
-
-class DocDetailResourceTest(RhizomeAPITestCase):
+class DocDetailResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(DocDetailResourceTest, self).setUp()
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
         self.top_lvl_location = self.ts.create_arbitrary_location(
             self.lt.id,
-            self.o.id,
             location_code='Nigeria',
             location_name='Nigeria')
 

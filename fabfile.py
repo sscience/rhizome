@@ -1,5 +1,6 @@
 # example invocation
 # $ fab -H ubuntu@xx.x.xxx.xx deploy -i ~/.ssh/some.key
+# $ fab -H my_server deploy ## if my_server is in ~/.ssh/config
 import time
 from fabric.api import local, run, cd, put, env
 
@@ -13,6 +14,7 @@ remote_work_path = '~/deploy/rhizome-work/' + current_timestamp
 remote_backend_path = '/var/www/apps/rhizome/'
 remote_frontend_path = '/var/www/apps/rhizome/webapp/public/static/'
 remote_manage_path = remote_backend_path + "manage.py"
+react_app_webapp_build_dir = 'webapp/public/static/js/'
 
 # deploy build
 # build-machine dependencies - node, gulp, bower, sass, compass, ruby, virtualenv, fabric-virtualenv
@@ -41,8 +43,6 @@ def run_tests():
     local("coverage run manage.py test --settings=rhizome.settings.test")
     local("coverage html --omit='*venv/*,*migrations/*,*admin*,*manage*,*wsgi*,*__init__*,*test*,*settings*,*url*' -i")
 
-
-# build dependencies
 def _build_dependencies():
     ### on build machine ###
 
@@ -57,11 +57,11 @@ def _build_dependencies():
 
     # update/install dependencies
     local("cd webapp && npm install")
-    local("cd react_app && npm install")
 
-    # build the package for the 'new' react app and dump it into #
-    # webapp/src/assets/js so that it will be picked up in npm run package
-    local("cd react_app && webpack")
+    # # build the package for the 'new' react app and dump it into #
+    # # webapp/src/assets/js so that it will be picked up in npm run package
+    # local("cd react_app && npm install")
+    # local("cd react_app && webpack")
 
     # build fe and package the project
     # with NODE_ENV=production, uglify have be done.
@@ -90,16 +90,20 @@ def _push_to_remote():
         #  so the 'find' command above may not be deleting enough compiled pycs]
         # when the unzip fe files will be included
 
-        ## dont think this is avtually overwriting
+        ## dont think this is actually overwriting
         run("unzip -o rhizome.zip -d %s" % remote_backend_path)
+
+    ## now push the react app to the remote
+    # put(react_app_webapp_build_dir + 'reactApp.js', remote_frontend_path + \
+    #     '/js/reactApp.js')
+    #
+    # put(react_app_webapp_build_dir + 'vendor.reactApp.js', remote_frontend_path + \
+    #     '/js/reactVendor.js')
 
     # in server path -
     with cd(remote_backend_path):
         # remove both compiled files
         run('sudo rm -rf `find . -name "*.pyc*"`')
-
-        # install python dependencies
-        # run("pip install -r requirements.txt")
 
         # echo "== SYNCDB / MIGRATE =="
         run("python manage.py syncdb --settings=settings")
@@ -109,14 +113,4 @@ def _push_to_remote():
         run("source ../environment_seed.env")
 
         # echo "== COLLECT STATIC =="
-        # run("python manage.py collectstatic --noinput --settings=settings")
-
-        # add waffle_switch pdf for exporting pdf
-        # run("./manage.py waffle_switch pdf on --create --settings=settings")
-        # run("./manage.py waffle_switch image on --create --settings=settings")
-
-        ## building documentation ##
-        # run("cd docs/ && make clean && make html")
-
-        # echo "== RUNNING TESTS =="
-        # run("python manage.py test rhizome.tests.test_api --settings=rhizome.settings.test")
+        run("python manage.py collectstatic --noinput --settings=settings")

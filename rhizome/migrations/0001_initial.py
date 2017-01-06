@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 import jsonfield.fields
-import django.db.models.deletion
 from django.conf import settings
 
 
@@ -37,21 +36,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='CacheJob',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('date_attempted', models.DateTimeField(auto_now=True)),
-                ('date_completed', models.DateTimeField(null=True)),
-                ('is_error', models.BooleanField()),
-                ('response_msg', models.CharField(max_length=255)),
-            ],
-            options={
-                'ordering': ('-date_attempted',),
-                'db_table': 'cache_job',
-            },
-        ),
-        migrations.CreateModel(
             name='CalculatedIndicatorComponent',
             fields=[
                 ('id', models.AutoField(verbose_name='ID',
@@ -71,23 +55,11 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=255)),
                 ('start_date', models.DateField()),
                 ('end_date', models.DateField()),
-                ('pct_complete', models.FloatField(default=0.001)),
                 ('created_at', models.DateTimeField(auto_now=True)),
             ],
             options={
                 'ordering': ('-start_date',),
                 'db_table': 'campaign',
-            },
-        ),
-        migrations.CreateModel(
-            name='CampaignToIndicator',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('campaign', models.ForeignKey(to='rhizome.Campaign')),
-            ],
-            options={
-                'db_table': 'campaign_to_indicator',
             },
         ),
         migrations.CreateModel(
@@ -106,7 +78,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID',
                                         serialize=False, auto_created=True, primary_key=True)),
-                ('uuid', models.CharField(default=1, unique=True, max_length=255)),
+                ('uuid', models.CharField(unique=True, max_length=255)),
                 ('title', models.CharField(unique=True, max_length=255)),
                 ('chart_json', jsonfield.fields.JSONField()),
             ],
@@ -122,6 +94,7 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(unique=True, max_length=255)),
                 ('description', models.CharField(max_length=1000)),
                 ('layout', models.IntegerField(default=0, null=True)),
+                ('rows', jsonfield.fields.JSONField(null=True, blank=True)),
             ],
             options={
                 'db_table': 'custom_dashboard',
@@ -142,7 +115,6 @@ class Migration(migrations.Migration):
                 ('unique_index', models.CharField(default=-1, max_length=255,unique=True)),
                 ('value', models.FloatField(null=True)),
                 ('created_at', models.DateTimeField(auto_now=True)),
-                ('cache_job', models.ForeignKey(default=-1, to='rhizome.CacheJob')),
             ],
             options={
                 'db_table': 'datapoint',
@@ -157,7 +129,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID',
                                         serialize=False, auto_created=True, primary_key=True)),
                 ('value', models.FloatField()),
-                ('cache_job', models.ForeignKey(default=-1, to='rhizome.CacheJob')),
                 ('campaign', models.ForeignKey(to='rhizome.Campaign')),
             ],
             options={
@@ -169,7 +140,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID',
                                         serialize=False, auto_created=True, primary_key=True)),
-                ('data_date', models.DateTimeField(null=True)),
+                ('data_date', models.DateTimeField()),
                 ('campaign', models.ForeignKey(to='rhizome.Campaign', null=True)),
                 ('value', models.FloatField(null=True)),
                 ('agg_on_location', models.BooleanField()),
@@ -202,7 +173,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now=True)),
                 ('created_by', models.ForeignKey(
                     to=settings.AUTH_USER_MODEL, null=True)),
-            ],
+                ('file_type', models.CharField(default='campaign', max_length=10)),
+                ],
             options={
                 'ordering': ('-created_at',),
                 'db_table': 'source_doc',
@@ -233,43 +205,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='HistoricalDataPointEntry',
-            fields=[
-                ('id', models.IntegerField(verbose_name='ID',
-                                           db_index=True, auto_created=True, blank=True)),
-                ('data_date', models.DateTimeField(null=True)),
-                 ('campaign', models.ForeignKey(to='rhizome.Campaign', null=True)),
-                ('unique_index', models.CharField(default=-1, max_length=255, db_index=True,unique=True)),
-                ('value', models.FloatField(null=True)),
-                ('created_at', models.DateTimeField(editable=False, blank=True)),
-                ('history_id', models.AutoField(serialize=False, primary_key=True)),
-                ('history_date', models.DateTimeField()),
-                ('history_type', models.CharField(max_length=1, choices=[
-                 ('+', 'Created'), ('~', 'Changed'), ('-', 'Deleted')])),
-                ('cache_job', models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.DO_NOTHING,
-                                                db_constraint=False, blank=True, to='rhizome.CacheJob', null=True)),
-                ('history_user', models.ForeignKey(related_name='+',
-                                                   on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL, null=True)),
-            ],
-            options={
-                'ordering': ('-history_date', '-history_id'),
-                'get_latest_by': 'history_date',
-                'verbose_name': 'historical data point entry',
-            },
-        ),
-
-        migrations.AlterField(
-            model_name='historicaldatapointentry',
-            name='campaign',
-            field=models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.DO_NOTHING, db_constraint=False, blank=True, to='rhizome.Campaign', null=True),
-        ),
-        migrations.AlterField(
-            model_name='historicaldatapointentry',
-            name='unique_index',
-            field=models.CharField(default=-1, max_length=255, db_index=True),
-        ),
-
-        migrations.CreateModel(
             name='Indicator',
             fields=[
                 ('id', models.AutoField(verbose_name='ID',
@@ -282,10 +217,10 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now=True)),
                 ('bound_json', jsonfield.fields.JSONField(default=[])),
                 ('tag_json', jsonfield.fields.JSONField(default=[])),
-                ('office_id', jsonfield.fields.JSONField(default=[])),
                 ('good_bound', models.FloatField(null=True)),
                 ('bad_bound', models.FloatField(null=True)),
                 ('source_name', models.CharField(max_length=55)),
+                ('resource_name', models.CharField(default=1, max_length=10)),
             ],
             options={
                 'ordering': ('name',),
@@ -318,17 +253,6 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'indicator_tag',
-            },
-        ),
-        migrations.CreateModel(
-            name='IndicatorToOffice',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('indicator', models.ForeignKey(to='rhizome.Indicator')),
-            ],
-            options={
-                'db_table': 'indicator_to_office',
             },
         ),
         migrations.CreateModel(
@@ -505,29 +429,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to='rhizome.Location', null=True),
         ),
         migrations.AddField(
-            model_name='indicatortooffice',
-            name='office',
-            field=models.ForeignKey(to='rhizome.Office'),
-        ),
-        migrations.AddField(
-            model_name='historicaldatapointentry',
-            name='indicator',
-            field=models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.DO_NOTHING,
-                                    db_constraint=False, blank=True, to='rhizome.Indicator', null=True),
-        ),
-        migrations.AddField(
-            model_name='historicaldatapointentry',
-            name='location',
-            field=models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.DO_NOTHING,
-                                    db_constraint=False, blank=True, to='rhizome.Location', null=True),
-        ),
-        migrations.AddField(
-            model_name='historicaldatapointentry',
-            name='source_submission',
-            field=models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.DO_NOTHING,
-                                    db_constraint=False, blank=True, to='rhizome.SourceSubmission', null=True),
-        ),
-        migrations.AddField(
             model_name='documentsourceobjectmap',
             name='source_object_map',
             field=models.ForeignKey(to='rhizome.SourceObjectMap'),
@@ -579,13 +480,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='datapoint',
+            name='campaign',
+            field=models.ForeignKey(to='rhizome.Campaign', null=True),
+        ),
+        migrations.AddField(
+            model_name='datapoint',
             name='source_submission',
             field=models.ForeignKey(to='rhizome.SourceSubmission'),
         ),
         migrations.AddField(
-            model_name='campaigntoindicator',
-            name='indicator',
-            field=models.ForeignKey(to='rhizome.Indicator'),
+            model_name='datapoint',
+            name='unique_index',
+            field=models.CharField(default=-1, unique=True, max_length=255),
         ),
         migrations.AddField(
             model_name='campaign',
@@ -598,16 +504,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to='rhizome.Office'),
         ),
         migrations.AddField(
-            model_name='campaign',
-            name='top_lvl_indicator_tag',
-            field=models.ForeignKey(to='rhizome.IndicatorTag'),
-        ),
-        migrations.AddField(
-            model_name='campaign',
-            name='top_lvl_location',
-            field=models.ForeignKey(to='rhizome.Location'),
-        ),
-        migrations.AddField(
             model_name='calculatedindicatorcomponent',
             name='indicator',
             field=models.ForeignKey(
@@ -618,11 +514,6 @@ class Migration(migrations.Migration):
             name='indicator_component',
             field=models.ForeignKey(
                 related_name='indicator_component', to='rhizome.Indicator'),
-        ),
-        migrations.AddField(
-            model_name='aggdatapoint',
-            name='cache_job',
-            field=models.ForeignKey(default=-1, to='rhizome.CacheJob'),
         ),
         migrations.AddField(
             model_name='aggdatapoint',
@@ -675,10 +566,6 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='datapointcomputed',
             unique_together=set([('location', 'campaign', 'indicator')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='campaigntoindicator',
-            unique_together=set([('indicator', 'campaign')]),
         ),
         migrations.AlterUniqueTogether(
             name='campaign',

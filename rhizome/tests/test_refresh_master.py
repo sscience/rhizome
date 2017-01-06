@@ -4,10 +4,15 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from pandas import read_csv, notnull, to_datetime
 
-from rhizome.etl_tasks.transform_upload import ComplexDocTransform
-from rhizome.etl_tasks.refresh_master import MasterRefresh
-from rhizome.models import Document, Location, IndicatorTag, Office, CacheJob, DocDetailType, CampaignType, Campaign, Indicator, CalculatedIndicatorComponent, DocumentDetail, SourceSubmission, SourceObjectMap, DocDataPoint, DataPoint
+from rhizome.models.campaign_models import Campaign, CampaignType
+from rhizome.models.location_models import Location
+from rhizome.models.indicator_models import Indicator, IndicatorTag,\
+    CalculatedIndicatorComponent
+from rhizome.models.document_models import Document, DocDetailType, \
+    DocumentDetail, SourceSubmission, SourceObjectMap
+from rhizome.models.datapoint_models import DocDataPoint, DataPoint
 
+# ./manage.py test rhizome.tests.test_refresh_master.RefreshMasterTestCase.test_refresh_master_init --settings=rhizome.settings.test
 
 class RefreshMasterTestCase(TestCase):
 
@@ -26,7 +31,7 @@ class RefreshMasterTestCase(TestCase):
         Location, Campaign, User .. all of the main models that you can see
         initialized in the first migrations in the datapoints application.
 
-        The set up method also runs the ComplexDocTransform method which simulates
+        The set up method also runs the CampaignDocTransform method which simulates
         the upload of a csv or processing of an ODK submission.  Ideally this
         test will run independently of this module, but for now this is how
         we initialize data in the system via the .csv below.
@@ -40,105 +45,29 @@ class RefreshMasterTestCase(TestCase):
         self.document.docfile = self.test_file_location
         self.document.save()
 
-        dt = ComplexDocTransform(self.user.id, self.document.id)
-        dt.main()
+        self.document.transform_upload()
 
     def test_refresh_master_init(self):
 
         self.set_up()
-        mr = MasterRefresh(self.user.id, self.document.id)
+        self.document.refresh_master()
 
-        self.assertTrue(isinstance, (mr, MasterRefresh))
+        self.assertTrue(True) # FIXME ..
 
     def test_submission_detail_refresh(self,):
 
         self.set_up()
-        mr = MasterRefresh(self.user.id, self.document.id)
 
         source_submissions_data = SourceSubmission.objects\
             .filter(document_id=self.document.id)\
             .values_list('id', flat=True)
 
-        mr.refresh_submission_details()
+        self.document.refresh_submission_details()
         submission_details = SourceSubmission.objects\
             .filter(document_id=self.document.id)
 
         self.assertEqual(len(source_submissions_data), len(submission_details))
 
-    # def test_data_that_needs_campaign(self):
-    #     '''
-    #     AFter syncing a document, the system needs to ensure that data that
-    #     has no associated campaign, will be marked with a cache_job_id of -2.
-    #
-    #     The aggregation framework searches for datapitns with cache_job_id = -1
-    #     but if one of these datapoitns has no associated campaign, then
-    #     aggregation will break.
-    #
-    #     Thus we must ensure that any data that needs campaign is marked
-    #     accordingly, so we dont break aggregation, and so the user knows that
-    #     there is data in the recent upload that needs to have an associated
-    #     campaign.
-    #
-    #     python manage.py test rhizome.tests.test_refresh_master\
-    #     .RefreshMasterTestCase.test_data_that_needs_campaign \
-    #     --settings=rhizome.settings.test
-    #     '''
-    #
-    #     self.set_up()
-    #
-    #
-    #     office_obj = Office.objects.all()[0]
-    #     tag_obj = IndicatorTag.objects.all()[0]
-    #     location_obj = Location.objects.all()[0]
-    #     indicator_obj = Indicator.objects.all()[0]
-    #     campaign_type_obj = CampaignType.objects.all()[0]
-    #     start_date, end_date, bad_date = '2016-12-01','2016-12-30','2017-01-01'
-    #     source_submission_obj = SourceSubmission.objects.all()[0]
-    #
-    #     my_campaign = Campaign.objects.create(
-    #         start_date = start_date,
-    #         end_date = end_date,
-    #         name = 'my_campaign',
-    #         top_lvl_location = location_obj,
-    #         top_lvl_indicator_tag = tag_obj,
-    #         office = office_obj,
-    #         campaign_type = campaign_type_obj
-    #     )
-    #
-    #     ## skipping over all of the refresH-master methos
-    #     ## and  just testing this particular test case
-    #     base_dp_dict = {
-    #         'location_id': location_obj.id,
-    #         'indicator_id': indicator_obj.id,
-    #         'value': 100,
-    #         'source_submission_id': source_submission_obj.id,
-    #     }
-    #
-    #     ## create dictionaries for the two datapoints ##
-    #     no_campaign_dp_dict = {'data_date' : bad_date}
-    #     has_campaign_dp_dict = {'data_date' : start_date}
-    #
-    #     no_campaign_dp_dict.update(base_dp_dict)
-    #     has_campaign_dp_dict.update(base_dp_dict)
-    #
-    #     ## create the datapoints ##
-    #     dp_without_campaign = DataPoint.objects.create(**no_campaign_dp_dict)
-    #     dp_with_campaign = DataPoint.objects.create(**has_campaign_dp_dict)
-    #
-    #     ## instantiate the MasterRefresh object ##
-    #     mr = MasterRefresh(self.user.id, self.document.id)
-    #     mr.ss_ids_to_process = [source_submission_obj]
-    #
-    #     ## this is the method we are testing ##
-    #     mr.mark_datapoints_with_needs_campaign()
-    #
-    #     ## now fetch the data after updating the cache_job_ids ##
-    #     no_campaign_dp_dict.pop('cache_job_id', None)
-    #     no_campaign = DataPoint.objects.get(**no_campaign_dp_dict)
-    #     has_campaign = DataPoint.objects.get(**has_campaign_dp_dict)
-    #
-    #     self.assertEqual(has_campaign.cache_job_id,-1)
-    #     self.assertEqual(no_campaign.cache_job_id,-2)
 
     def test_latest_data_gets_synced(self):
         '''
@@ -202,9 +131,7 @@ class RefreshMasterTestCase(TestCase):
         DocDataPoint.objects.create(**good_doc_dp_dict)
         DocDataPoint.objects.create(**bad_doc_dp_dict)
 
-        mr = MasterRefresh(self.user.id, self.document.id)
-
-        mr.sync_datapoint([ss_old.id, ss_new.id])
+        self.document.sync_datapoint()
 
         dp_result = DataPoint.objects.filter(
             location_id=test_loc_id,
@@ -220,7 +147,7 @@ class RefreshMasterTestCase(TestCase):
         This simulates the following use case:
 
         As a user journey we can describe this test case as:
-            - user uploads file ( see how set_up method calls ComplexDocTransform )
+            - user uploads file ( see how set_up method calls CampaignDocTransform )
             - user maps metadata
             - user clicks " refresh master "
                 -> user checks to see if data is correct
@@ -290,8 +217,7 @@ class RefreshMasterTestCase(TestCase):
         som_id_c.master_object_id = first_campaign
         som_id_c.save()
 
-        mr_with_new_meta = MasterRefresh(self.user.id, self.document.id)
-        mr_with_new_meta.refresh_submission_details()
+        self.document.refresh_submission_details()
 
         first_submission_detail = SourceSubmission.objects\
             .get(id=ss_id)
@@ -303,14 +229,14 @@ class RefreshMasterTestCase(TestCase):
         ## now that we have created the mappign, "refresh_master" ##
         ##         should create the relevant datapoints          ##
 
-        mr_with_new_meta.submissions_to_doc_datapoints()
+        self.document.submissions_to_doc_datapoints()
         doc_dp_ids = DocDataPoint.objects.filter(
             document_id=self.document.id, indicator_id=first_indicator_id).values()
 
         # Test Case #3
         self.assertEqual(1, len(doc_dp_ids))
 
-        mr_with_new_meta.sync_datapoint()
+        self.document.sync_datapoint()
         dps = DataPoint.objects.all()
 
         # Test Case #4
@@ -323,8 +249,7 @@ class RefreshMasterTestCase(TestCase):
         som_id_i.master_object_id = new_indicator_id
         som_id_i.save()
 
-        mr_after_new_mapping = MasterRefresh(self.user.id, self.document.id)
-        mr_after_new_mapping.main()
+        self.document.refresh_master()
 
         dp_with_new_indicator = DataPoint.objects.filter(
             indicator_id=new_indicator_id)
@@ -346,7 +271,6 @@ class RefreshMasterTestCase(TestCase):
 
         top_lvl_tag = IndicatorTag.objects.create(id=1, tag_name='Polio')
         campaign_df = read_csv('rhizome/tests/_data/campaigns.csv')
-        campaign_df['top_lvl_indicator_tag_id'] = top_lvl_tag.id
 
         location_df = read_csv('rhizome/tests/_data/locations.csv')
         indicator_df = read_csv('rhizome/tests/_data/indicators.csv')
@@ -354,10 +278,6 @@ class RefreshMasterTestCase(TestCase):
             ('rhizome/tests/_data/calculated_indicator_component.csv')
 
         user_id = User.objects.create_user('test', 'john@john.com', 'test').id
-        office_id = Office.objects.create(id=1, name='test').id
-
-        cache_job_id = CacheJob.objects.create(id=-2, date_attempted='2015-01-01',
-                                               is_error=False)
 
         document_id = Document.objects.create(
             doc_title='test',
@@ -423,8 +343,7 @@ class RefreshMasterTestCase(TestCase):
             l_id = Location.objects.create(
                 name=l,
                 location_code=l,
-                location_type_id=1,
-                office_id=1
+                location_type_id=1
             ).id
             l_som = SourceObjectMap.objects.create(
                 master_object_id=l_id,
@@ -437,9 +356,6 @@ class RefreshMasterTestCase(TestCase):
         for i, (c) in enumerate(distinct_campaign_codes):
             c_id = Campaign.objects.create(
                 name=c,
-                top_lvl_location_id=1,
-                top_lvl_indicator_tag_id=1,
-                office_id=1,
                 campaign_type_id=1,
                 start_date='2010-01-0' + str(i + 1),
                 end_date='2010-01-0' + str(i + 1)
@@ -461,11 +377,9 @@ class RefreshMasterTestCase(TestCase):
             source_object_code='# Missed children due to inaccessibility (NEPI)'
         )
 
-        dt = ComplexDocTransform(self.user.id, document.id)
-        dt.main()
+        document.transform_upload()
 
-        mr = MasterRefresh(self.user.id, document.id)
-        mr.main()
+        self.document.refresh_master()
 
         ss_id_list = SourceSubmission.objects\
             .filter(document_id=document.id)\

@@ -1,20 +1,18 @@
-from base_test_case import RhizomeAPITestCase
-from rhizome.models import UserGroup
-from setup_helpers import TestSetupHelpers
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.models.user_models import UserGroup
+from rhizome.tests.setup_helpers import TestSetupHelpers
 from django.contrib.auth.models import User, Group
 
 
-class UserGroupResourceTest(RhizomeAPITestCase):
+class UserGroupResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(UserGroupResourceTest, self).setUp()
 
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
         self.top_lvl_location = self.ts.create_arbitrary_location(
             self.lt.id,
-            self.o.id,
             location_code='Nigeria',
             location_name='Nigeria')
 
@@ -65,7 +63,6 @@ class UserGroupResourceTest(RhizomeAPITestCase):
         group = Group.objects.create(name="Sam's Group")
         user_group = UserGroup.objects.create(user=user, group=group)
         self.assertEqual(UserGroup.objects.count(), 1)
-        delete_url = '/api/v1/user_group/?user_id=' + \
-            str(user.id) + '&group_id=' + str(group.id)
+        delete_url = '/api/v1/user_group/%s/' % user_group.id
         self.ts.delete(self, delete_url)
         self.assertEqual(UserGroup.objects.count(), 0)

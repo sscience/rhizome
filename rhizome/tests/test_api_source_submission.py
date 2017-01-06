@@ -1,15 +1,13 @@
-from base_test_case import RhizomeAPITestCase
-from rhizome.models import CacheJob, Office, Indicator, Location,\
-    LocationType, DataPointComputed, CampaignType, Campaign, IndicatorTag,\
-    LocationPermission, Document
-from setup_helpers import TestSetupHelpers
-from rhizome.etl_tasks.transform_upload import ComplexDocTransform
-from rhizome.models import SourceObjectMap, SourceSubmission
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
+
+from rhizome.models.document_models import SourceObjectMap,\
+    SourceSubmission
 
 from rhizome.cache_meta import LocationTreeCache
 
 
-class SourceSubmissionResourceTest(RhizomeAPITestCase):
+class SourceSubmissionResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(SourceSubmissionResourceTest, self).setUp()
@@ -43,9 +41,9 @@ class SourceSubmissionResourceTest(RhizomeAPITestCase):
 
     def test_get_source_submission_by_doc(self):
         doc = self.ts.create_arbitrary_document(
+            file_type='campaign',
             document_docfile='eoc_post_campaign.csv')
-        dt = ComplexDocTransform(self.ts.user.id, doc.id)
-        dt.main()
+        doc.transform_upload()
         get_data = {'document_id': doc.id}
         resp = self.ts.get(self, '/api/v1/source_submission/', get_data)
         self.assertHttpOK(resp)
@@ -55,12 +53,10 @@ class SourceSubmissionResourceTest(RhizomeAPITestCase):
 
     def test_get_source_submission_by_id(self):
         doc = self.ts.create_arbitrary_document(
-            document_docfile='eoc_post_campaign.csv')
-        dt = ComplexDocTransform(self.ts.user.id, doc.id)
-        dt.main()
+            document_docfile='eoc_post_campaign.csv', file_type='campaign')
+        doc.transform_upload()
         ss_id = SourceSubmission.objects.all()[0].id
-        get_data = {'id': ss_id}
-        resp = self.ts.get(self, '/api/v1/source_submission/', get_data)
+        resp = self.ts.get(self, '/api/v1/source_submission/%s/' % ss_id)
         self.assertHttpOK(resp)
         resp_data = self.deserialize(resp)
-        self.assertEqual(resp_data['objects'][0]['id'], ss_id)
+        self.assertEqual(resp_data['id'], ss_id)

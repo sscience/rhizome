@@ -4,18 +4,13 @@ from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication
 from rhizome.api.serialize import CustomSerializer
 from rhizome.api.custom_session_authentication import CustomSessionAuthentication
 from rhizome.api.custom_cache import CustomCache
-from rhizome.api.resources.base import BaseResource
+from rhizome.api.resources.base_resource import BaseResource
+
 
 class BaseNonModelResource(BaseResource):
     '''
-    NOTE: This applies to only the V1 API.  This is only used for the
-    /api/v1/datapoint endpoint.
-
-    This is the top level class all other Resource Classes inherit from this.
-    The API Key authentication is defined here and thus is required by all
-    other resources.
-
-    See Here: http://django-tastypie.readthedocs.org/en/latest/resources.html?highlight=modelresource
+    Needs Documentation
+    http://django-tastypie.readthedocs.org/en/latest/resources.html?highlight=modelresource
     '''
 
     class Meta:
@@ -26,34 +21,64 @@ class BaseNonModelResource(BaseResource):
         always_return_data = True
         cache = CustomCache()
         serializer = CustomSerializer()
+        GET_params_required = []
+        default_limit = 1
 
     def dehydrate(self, bundle):
         bundle.data.pop("resource_uri", None)
 
         return bundle
 
-    def dispatch(self, request_type, request, **kwargs):
+    def get_object_list(self, request):
         '''
-        '''
+        Basic GET behavior for the non model resource.
 
-        return super(BaseNonModelResource, self).dispatch(request_type, request, **kwargs)
+        This line of code applies the queryset
+
+        This is useful becuase for instance, if you want to queue up your data
+        in a persistent data structure, you can us `pre_process_data`, and
+        then set the `queryset` to be the output of that operation.  In this
+        case while you loose some speed of request by writing that data before
+        reading it again, as opposed to just feeding it up directly, but if for
+        instance that data needs to be persistent for later use ( take for
+        example the DocTransform logic, which saves .csv data to a number of
+        tables that then the user can interact with.
+        '''
+        return list(self._meta.queryset[:self._meta.default_limit])
 
     def get_list(self, request, **kwargs):
         """
-        Overriden from Tastypie..
+        Overriden from Tastypie.. Very simply, run any necessary preprocssing,
+        and then return the queryset that is assigned in the Meta class of
+        the resource.
+
+        ===
+
+        One of the uses of the base_non_model_resources is that when we have
+        an API call that really is meant to process data more than it is to
+        GET or POST it.
+
+        In this method, we check to see it the resource being called
+        ( transform_upload for example ), has a method named, `pre_process_data`
+        and if it does, that method is called.
+
+        Whatever that particular resource should return when it comes to
+        a GET request is handled in the `QuerySet` attribute of the Meta class.
         """
 
-        base_bundle = self.build_bundle(request=request)
-        objects = self.obj_get_list(bundle=base_bundle)
-        bundles = [obj.__dict__ for obj in objects]
+        # first make sure that we have all of the required parameters for teh
+        # request as defined by the Meta class of the resource
+        filters = self.validate_filters(request)
 
-        to_be_serialized = {
-            'objects': bundles,
+        if hasattr(self, "pre_process_data"):
+            self.pre_process_data(request)
+
+        # potentially pass filters here
+        objects = self.get_object_list(request)
+        response_data = {
+            'objects': objects,
             'meta': {'total_count': len(objects)},  # add paginator info here..
             'error': None,
         }
 
-        to_be_serialized[self._meta.collection_name] = bundles
-        to_be_serialized = self.alter_list_data_to_serialize(
-            request, to_be_serialized)
-        return self.create_response(request, to_be_serialized)
+        return self.create_response(request, response_data)

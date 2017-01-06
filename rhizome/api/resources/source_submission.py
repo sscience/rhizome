@@ -1,6 +1,6 @@
 from rhizome.api.resources.base_model import BaseModelResource
 
-from rhizome.models import SourceSubmission
+from rhizome.models.document_models import SourceSubmission
 
 
 class SourceSubmissionResource(BaseModelResource):
@@ -14,13 +14,20 @@ class SourceSubmissionResource(BaseModelResource):
 
     class Meta(BaseModelResource.Meta):
         resource_name = 'source_submission'
+        object_class = SourceSubmission
+        # GET_params_required = ['document_id']
 
-    def get_object_list(self, request):
+    def apply_filters(self, request, applicable_filters):
+        """
+        An ORM-specific implementation of ``apply_filters``.
+        The default simply applies the ``applicable_filters`` as ``**kwargs``,
+        but should make it possible to do more advanced things.
+        """
 
-        try:
-            qs = SourceSubmission.objects.filter(
-                document_id=request.GET['document_id']).values()
-        except KeyError:
-            qs = SourceSubmission.objects.filter(id=request.GET['id']).values()
+        ## fix this in the front end to request the resourec in REST style ##
+        id_param = request.GET.get('id', None)
+        if id_param:
+            return self.get_object_list(request).filter(**{'id': id_param})
 
-        return qs
+        doc_filter = {'document_id': request.GET.get('document_id')}
+        return self.get_object_list(request).filter(**doc_filter)

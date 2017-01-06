@@ -1,13 +1,8 @@
-from rhizome.api.resources.base_model import BaseModelResource
-from rhizome.models import DataPoint
-from rhizome.models import Document
-from rhizome.api.exceptions import DatapointsException
-from rhizome.agg_tasks import AggRefresh
+from rhizome.api.resources.base_non_model import BaseNonModelResource
+from rhizome.models.document_models import Document
+from rhizome.models.datapoint_models import DataPoint
 
-from rhizome.etl_tasks.refresh_master import MasterRefresh
-
-
-class RefreshMasterResource(BaseModelResource):
+class RefreshMasterResource(BaseNonModelResource):
     '''
     **GET Request** Runs refresh master, and agg refresh for a given document
         - *Required Parameters:*
@@ -15,26 +10,33 @@ class RefreshMasterResource(BaseModelResource):
         - *Errors:*
             returns 500 error if no document id is provided
     '''
-    class Meta(BaseModelResource.Meta):
+    class Meta(BaseNonModelResource.Meta):
         resource_name = 'refresh_master'
+        GET_params_required = ['document_id']
+        queryset = Document.objects.all().values()
+        default_limit = 1
 
-    def get_object_list(self, request):
-        try:
-            doc_id = request.GET['document_id']
-        except KeyError:
-            raise DatapointsException(
-                message='Document_id is a required API param')
-        # dt = DocTransform(request.user.id, doc_id)
+    def pre_process_data(self, request):
+        '''
+        Run the refresh master task for the document_id passed.
 
-        mr = MasterRefresh(request.user.id, doc_id)
-        mr.main()
+        Also, for any effected campaigns, run the agg_refresh on those in order
+        to calculated aggregated and calcualted values.
+        '''
 
-        doc_campaign_ids = set(list(DataPoint.objects
-                                    .filter(source_submission__document_id=doc_id)
-                                    .values_list('campaign_id', flat=True)))
+        doc_id = request.GET.get('document_id', None)
+        document_object = Document.objects.get(id = doc_id)
+        document_object.refresh_master()
 
-        if not None in doc_campaign_ids:
+        if Document.objects.get(id = doc_id).file_type == 'campaign':
+            ## check document object map first to make query faster ##
+            # DocumentObjectMap.objects.filter(document_id = doc_id,\
+            # content_type = 'document').values_list('master_object_id,flat=True')
+            doc_campaign_ids = set(list(DataPoint.objects
+                            .filter(source_submission__document_id=doc_id)
+                            .values_list('campaign_id', flat=True)))
             for c_id in doc_campaign_ids:
-                AggRefresh(c_id)
+                campaign_object = Campaign.objects.get(id = c_id)
+                campaign_object.aggregate_and_calculate()
 
         return Document.objects.filter(id=doc_id).values()

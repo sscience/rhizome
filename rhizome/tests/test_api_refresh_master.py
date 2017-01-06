@@ -1,11 +1,20 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
-from rhizome.models import DataPoint, IndicatorTag, User, Office, CacheJob, LocationType, Document, DocDetailType, CampaignType, CalculatedIndicatorComponent, IndicatorToTag, DocumentDetail, SourceObjectMap, Location, Campaign, Indicator, DataPointComputed
+from django.contrib.auth.models import User
 from pandas import read_csv, notnull, to_datetime
-from rhizome.etl_tasks.transform_upload import ComplexDocTransform
+
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
+
+from rhizome.models.campaign_models import Campaign, CampaignType, \
+    DataPointComputed
+from rhizome.models.location_models import Location, LocationType
+from rhizome.models.indicator_models import Indicator, IndicatorTag, \
+    CalculatedIndicatorComponent, IndicatorToTag
+from rhizome.models.document_models import Document, DocDetailType, \
+    DocumentDetail, SourceObjectMap
+from rhizome.models.datapoint_models import DataPoint
 
 
-class RefreshMasterAPIResourceTest(RhizomeAPITestCase):
+class RefreshMasterAPIResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(RefreshMasterAPIResourceTest, self).setUp()
@@ -14,8 +23,8 @@ class RefreshMasterAPIResourceTest(RhizomeAPITestCase):
 
     def test_refresh(self):
         doc_id = self.ingest_file('eoc_post_campaign.csv')
-        dt = ComplexDocTransform(self.user_id, doc_id)
-        dt.main()
+        document_object = Document.objects.get(id = doc_id)
+        document_object.transform_upload()
         self.assertEqual(DataPoint.objects.count(), 0)
         self.assertEqual(DataPointComputed.objects.count(), 0)
         get_data = {
@@ -29,8 +38,8 @@ class RefreshMasterAPIResourceTest(RhizomeAPITestCase):
 
     def test_refresh_no_params(self):
         doc_id = self.ingest_file('eoc_post_campaign.csv')
-        dt = ComplexDocTransform(self.user_id, doc_id)
-        dt.main()
+        document_object = Document.objects.get(id = doc_id)
+        document_object.transform_upload()
         self.assertEqual(DataPoint.objects.count(), 0)
         self.assertEqual(DataPointComputed.objects.count(), 0)
         resp = self.ts.get(self, '/api/v1/refresh_master/')
@@ -47,8 +56,6 @@ class RefreshMasterAPIResourceTest(RhizomeAPITestCase):
         top_lvl_tag = IndicatorTag.objects.create(id=1, tag_name='Polio')
 
         campaign_df = read_csv('rhizome/tests/_data/campaigns.csv')
-        campaign_df['top_lvl_indicator_tag_id'] = top_lvl_tag.id
-
         campaign_df['start_date'] = to_datetime(campaign_df['start_date'])
         campaign_df['end_date'] = to_datetime(campaign_df['end_date'])
 
@@ -59,10 +66,6 @@ class RefreshMasterAPIResourceTest(RhizomeAPITestCase):
 
         user_id = User.objects.create_user('test', 'test@test.com', 'test').id
         self.user_id = user_id
-        office_id = Office.objects.create(id=1, name='test').id
-
-        cache_job_id = CacheJob.objects.create(id=-2,
-                                               date_attempted='2015-01-01', is_error=False)
 
         self.location_type1 = LocationType.objects.create(admin_level=0,
                                                           name="country", id=1)
@@ -137,7 +140,7 @@ class RefreshMasterAPIResourceTest(RhizomeAPITestCase):
             mapped_by_id=user_id,
             master_object_id=self.mapped_campaign_id
         )
-        self.mapped_indicator_id_0 = self.locations[0].id
+        self.mapped_indicator_id_0 = self.indicators[0].id
         indicator_map = SourceObjectMap.objects.create(
             source_object_code='Percent missed children_PCA',
             content_type='indicator',

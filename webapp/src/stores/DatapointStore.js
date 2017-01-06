@@ -49,10 +49,15 @@ var DatapointStore = Reflux.createStore({
     const datapoints = {
       meta: response.meta,
       raw: response.objects,
-      flattened: this.flatten(response.objects),
+      flattened: this.flatten(response.objects, response.meta),
       melted: this.melt(response.objects, response.meta.indicator_ids)
     }
-    datapoints.grouped = _.groupBy(datapoints.flattened, 'campaign.id')
+    if (response.meta.time_groupings) {
+      datapoints.grouped = _.groupBy(datapoints.flattened, 'time_grouping')
+    } else {
+      datapoints.grouped = _.groupBy(datapoints.flattened, 'campaign.id')
+      datapoints.grouped = _.sortBy(datapoints.grouped, group => group[0].campaign.start_date).reverse()
+    }
     this.setState(datapoints)
   },
   onFetchDatapointsFailed: function (error) {
@@ -69,21 +74,25 @@ var DatapointStore = Reflux.createStore({
   // =========================================================================== //
   //                                  UTILITIES                                  //
   // =========================================================================== //
-  flatten: function (datapoints) {
+  flatten: function (datapoints, meta) {
     const flattened = datapoints.map(d => {
       const indicator = this.indicators.index[d.indicator_id]
       const datapoint = {
         id: d.computed_id,
-        value: d.value ? this._formatValue(d.value, indicator.data_format) : null,
+        value: d.value !== null ? this._formatValue(d.value, indicator.data_format) : null,
         location: this.locations.index[d.location_id],
         indicator: indicator
       }
-      if (d.data_date) { datapoint.data_date = d.data_date }
+      if (d.data_date) datapoint.data_date = d.data_date
+      if (d.time_grouping) datapoint.time_grouping = d.time_grouping
       if (d.campaign_id) {
         datapoint.campaign = this.campaigns.index[d.campaign_id] || this._createYearCampaign(d.campaign_id)
       }
       return datapoint
     })
+    if (meta.get_params.group_by_time === 'campaign') {
+      return _.sortBy(flattened, d => d.campaign.start_date)
+    }
     return flattened
   },
 
@@ -107,8 +116,7 @@ var DatapointStore = Reflux.createStore({
   },
 
   melt: function (datapoints, indicator_ids) {
-    const selected_indicator_ids = indicator_ids.split(',')
-    const baseIndicators = selected_indicator_ids.map(id => ({ indicator: parseInt(id, 0), value: 0 }))
+    const baseIndicators = indicator_ids.map(id => ({ indicator: parseInt(id, 0), value: 0 }))
     const melted_datapoints = _(datapoints).map(datapoint => {
       const base = _.omit(datapoint, 'indicators')
       const indicatorFullList = _.assign(_.cloneDeep(baseIndicators), datapoint.indicators)

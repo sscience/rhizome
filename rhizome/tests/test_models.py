@@ -1,5 +1,13 @@
 from django.test import TestCase
-from rhizome.models import IndicatorTag, User, Office, LocationType, CampaignType, Indicator, IndicatorTag, Location, Document, SourceSubmission, DataPoint
+
+from django.contrib.auth.models import User
+
+from rhizome.models.campaign_models import Campaign, CampaignType
+from rhizome.models.location_models import Location, LocationType
+from rhizome.models.indicator_models import Indicator, IndicatorTag
+from rhizome.models.document_models import Document, SourceSubmission
+from rhizome.models.datapoint_models import DataPoint
+
 from rhizome.cache_meta import LocationTreeCache
 from datetime import date, timedelta
 
@@ -28,14 +36,6 @@ class IndicatorTagTest(MasterModelTestCase):
 
         self.assertEqual(ebola_tag.tag_name, self.tag_name)
 
-    def test_get_indicator_ids_for_tag(self):
-
-        self.set_up()
-        test_tag = IndicatorTag.objects.get(tag_name=self.tag_name)
-
-        test_tag.get_indicator_ids_for_tag()
-
-
 class CampaignTest(MasterModelTestCase):
 
     # python manage.py test rhizome.tests.test_models.CampaignTest\
@@ -49,7 +49,6 @@ class CampaignTest(MasterModelTestCase):
 
         self.u = User.objects.create_user(
             'polio', 'eradicate@polio.com', 'polio')
-        o = Office.objects.create(name='NGA')
         lt = LocationType.objects.create(name='country', admin_level=0)
         ct = CampaignType.objects.create(name='NID')
         self.ind_0 = Indicator.objects.create(
@@ -58,7 +57,7 @@ class CampaignTest(MasterModelTestCase):
             name='number of WPV cases', short_name='W')
         ind_tag = IndicatorTag.objects.create(tag_name='Polio')
         self.tpl = Location.objects.create(name='NGA', location_code='NGA',
-                                           office_id=o.id, location_type_id=lt.id)
+                                           location_type_id=lt.id)
         self.doc = Document.objects.create(
             doc_title='test',
             created_by_id=self.u.id,
@@ -67,9 +66,6 @@ class CampaignTest(MasterModelTestCase):
         ### SET UP CAMPAIGN DEFINITION ###
 
         self.c = Campaign.objects.create(
-            office_id=o.id,
-            top_lvl_location_id=self.tpl.id,
-            top_lvl_indicator_tag_id=ind_tag.id,
             campaign_type_id=ct.id,
             name='test',
             start_date=st,
@@ -78,72 +74,6 @@ class CampaignTest(MasterModelTestCase):
 
         ltc = LocationTreeCache()
         ltc.main()
-
-    # def test_campaign_create_sets_cache_job_of_datapoints(self):
-    #
-    #     self.set_up()
-    #
-    #     start_date, data_date, end_date = '2018-01-01', '2018-01-10', '2018-01-31'
-    #
-    #     ss = SourceSubmission.objects.create(
-    #         document_id = self.doc.id,
-    #         submission_json = '',
-    #         row_number = 0,
-    #         data_date = self.d
-    #     )
-    #     dp = DataPoint.objects.create(
-    #         id = 999999,
-    #         location_id = self.tpl.id,\
-    #         indicator_id = self.ind_0.id,\
-    #         value=2,
-    #         data_date = data_date,
-    #         source_submission_id = ss.id,
-    #         cache_job_id=-2
-    #     )
-    #
-    #     self.c.start_date = start_date
-    #     self.c.end_date = end_date
-    #     self.c.save() ## this should set the datapoint above to "to_process"
-    #
-    #     dp_after_campaign_save = DataPoint.objects.get(id = dp.id)
-    #     self.assertEqual(dp_after_campaign_save.cache_job_id, -1)
-
-    # def test_campaign_create(self):
-    #
-    #     ###### ADD DATA TO CAMPAIGN #####
-    #
-    #     self.set_up()
-    #
-    #     ss = SourceSubmission.objects.create(
-    #         document_id = self.doc.id,
-    #         submission_json = '',
-    #         row_number = 0,
-    #         data_date = self.d
-    #     )
-    #     dp_0 = DataPoint.objects.create(
-    #         location_id = self.tpl.id,\
-    #         indicator_id = self.ind_0.id,\
-    #         value=2,
-    #         data_date = self.d,
-    #         source_submission_id = ss.id,
-    #         cache_job_id=-1
-    #     )
-    #     dp_1 = DataPoint.objects.create(\
-    #         location_id = self.tpl.id,\
-    #         indicator_id = self.ind_1.id,\
-    #         value = 3,\
-    #         data_date = self.d, \
-    #         source_submission_id = ss.id,\
-    #         cache_job_id = -1
-    #     )
-    #
-    #     agr = AggRefresh(campaign_id = self.c.id)
-    #
-    #     dp_ids = self.c.get_datapoints()
-    #
-    #     self.assertEqual(len(dp_ids),2)
-    #     self.assertTrue(isinstance,(self.c,Campaign))
-    #     # self.assertEqual(dpi.__unicode__(),dpi.name)
 
 
 class IndicatorTest(MasterModelTestCase):
@@ -168,12 +98,12 @@ class LocationTest(MasterModelTestCase):
         self.location_type_id = LocationType.objects.create(
             name='test', admin_level=0).id
 
-    def create_location(self, name="test", office_id=1):
+    def create_location(self, name="test"):
 
         self.set_up()
 
         location = Location.objects.create(
-            name=name, office_id=office_id, location_type_id=self.location_type_id)
+            name=name, location_type_id=self.location_type_id)
 
         return location
 

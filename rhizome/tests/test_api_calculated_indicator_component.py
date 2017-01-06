@@ -1,18 +1,16 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
 
 
-class CalculatedIndicatorResourceTest(RhizomeAPITestCase):
+class CalculatedIndicatorResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(CalculatedIndicatorResourceTest, self).setUp()
         self.ts = TestSetupHelpers()
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
 
         self.top_lvl_location = self.ts.create_arbitrary_location(
             self.lt.id,
-            self.o.id,
             location_code='Nigeria',
             location_name='Nigeria')
 

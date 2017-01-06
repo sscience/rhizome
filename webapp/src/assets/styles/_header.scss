@@ -13,9 +13,6 @@ header {
       text-align: center !important;
       padding: 0 !important;
     }
-    .dashboards-nav, .dashboards-bar, nav > ul > li{
-      padding: 0 !important;
-    }
     ul.dashboards-nav > li > a {
       padding: 27px 10px;
       @media #{$small-only} {
@@ -103,4 +100,12 @@ header {
 .image-style {
   width: auto;
   height: 5rem;
+}
+
+h2.subheader {
+  font-family: adelle;
+  font-size: 1.3rem;
+  margin: 1.2rem 0 0 1rem;
+  display: block;
+  font-weight: 700;
 }

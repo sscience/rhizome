@@ -9,6 +9,7 @@ class DatapointTable extends Table {
   constructor (props) {
     super(props)
     this.groupByIndicator = this.props.groupBy === 'indicator'
+    this.groupByCampaign = this.props.groupByTime === 'campaign'
     this.rows = this.groupByIndicator ? _.groupBy(this.props.datapoints.flattened, 'indicator.id') : this.props.datapoints.grouped
   }
 
@@ -17,31 +18,35 @@ class DatapointTable extends Table {
   }
 
   renderHeaderRow = function () {
-    const first_row = _.toArray(this.rows)[0]
-    const header_cells = first_row.map(datapoint => {
-      const entity = this.groupByIndicator ? datapoint.campaign : datapoint.indicator
+    const first_complete_row = _.toArray(this.rows).sort((a,b) => b.length - a.length)[0]
+    const header_cells = first_complete_row.map(datapoint => {
+      // const entity = this.groupByCampaign ? datapoint.campaign : datapoint.indicator
+      const entity = datapoint.indicator
       return <th>{entity.short_name || entity.name}</th>
     })
     return (
       <tr>
         <th></th>
-        { !this.groupByIndicator ? <th>{_.capitalize(this.props.groupByTime)}</th> : null}
+        { !this.groupByIndicator ? <th>{_.capitalize(this.props.groupByTime)}</th> : null }
         { header_cells }
       </tr>
     )
   }
 
   renderRows = function () {
-    return _.map(this.rows, (row, key) => {
+    const groupByYear = this.props.groupByTime === 'year'
+    const rows = groupByYear ? _.toArray(this.rows).reverse() : this.rows
+    return _.map(rows, (row, key) => {
       const first_cell = row[0]
       const entity = this.groupByIndicator ? first_cell.indicator : first_cell.location
       const indicator = this.props.indicators_index[key]
-      const date_format = this.props.groupByTime === 'year' ? 'YYYY' : 'MMM YYYY'
+      const date_format = groupByYear ? 'YYYY' : 'MMM YYYY'
+      const date = groupByYear ? first_cell.time_grouping : moment(first_cell.campaign.start_date).format(date_format)
       return (
         <tr>
           <td><strong>{entity.name}</strong></td>
-          { !this.groupByIndicator ? <td>{moment(first_cell.campaign.start_date).format(date_format)}</td> : null}
-          { _.map(row, datapoint =>  <DatapointTableCell datapoint={datapoint} onSave={this.props.editable ? this.onSave : null} />) }
+          { !this.groupByIndicator ? <td>{date}</td> : null}
+          { _.map(row, datapoint => <DatapointTableCell datapoint={datapoint} onSave={this.props.editable ? this.onSave : null} />) }
         </tr>
       )
     })

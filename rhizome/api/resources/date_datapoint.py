@@ -1,28 +1,15 @@
-
-import itertools
-from pandas import DataFrame, concat, notnull
-from django.http import HttpResponse
-
 from tastypie import fields
-from tastypie.utils.mime import build_content_type
+from tastypie.resources import ALL
+from pandas import DataFrame
 
 from rhizome.api.serialize import CustomSerializer
 from rhizome.api.resources.base_model import BaseModelResource
+from rhizome.api.exceptions import RhizomeApiException
+from rhizome.models.location_models import Location, LocationTree
+from rhizome.models.document_models import Document, SourceSubmission
+from rhizome.models.datapoint_models import DataPoint
 
-from rhizome.models import DataPointComputed, Campaign, Location,\
-    LocationPermission, LocationTree, IndicatorClassMap, Indicator, DataPoint, \
-    CalculatedIndicatorComponent, LocationType
-import math
-
-class ResultObject(object):
-    '''
-    This is the same as a row in the CSV export in which one row has a distinct
-    location / campaign combination, and the remaing columns represent the
-    indicators requested.  Indicators are a list of IndicatorObjects.
-    '''
-    # location = None
-    # campaign = None
-    # indicators = list()
+from rhizome.api import custom_logic
 
 
 class DateDatapointResource(BaseModelResource):
@@ -39,14 +26,8 @@ class DateDatapointResource(BaseModelResource):
             'cumulative'
     '''
 
-    error = None
-    parsed_params = {}
     indicator_id = fields.IntegerField(attribute='indicator_id', null=True)
-    campaign_id = fields.IntegerField(attribute='campaign_id', null=True)
-    data_date = fields.DateField(attribute='data_date', null=True)
-    computed_id = fields.IntegerField(attribute='computed_id', null=True)
     location_id = fields.IntegerField(attribute='location_id')
-    value = fields.CharField(attribute='value', null=True)
 
     class Meta(BaseModelResource.Meta):
         '''
@@ -60,58 +41,83 @@ class DateDatapointResource(BaseModelResource):
         handler for JSON responses and transforms the data to csv when the
         user clicks the "download data" button on the data explorer.
         note - authentication inherited from parent class
+
+
+        # NOTE this needs to be cleaned up and any many of these methonds
+        # should be executed by the parent ( base model resource )
+        using the DataPoint as the object_class
         '''
 
         resource_name = 'date_datapoint'  # cooresponds to the URL of the resource
+        GET_params_required = ['indicator__in']
+        object_class = DataPoint
+        required_fields_for_post = ['indicator_id','location_id', 'data_date', \
+            'value']
         max_limit = None  # return all rows by default ( limit defaults to 20 )
         serializer = CustomSerializer()
+        filtering = {
+            'indicator_id' : ALL ,
+            'location_id' : ALL ,
+            'data_date' : ALL,
+            'value'  : ALL
+        }
 
     def __init__(self, *args, **kwargs):
         '''
         '''
 
+        self.campaign_id_list, self.distinct_time_groupings = [],[]
         super(DateDatapointResource, self).__init__(*args, **kwargs)
-        self.error = None
-        self.parsed_params = None
 
-    def create_response(self, request, data, response_class=HttpResponse,
-                        **response_kwargs):
+    def add_default_post_params(self, bundle):
+        '''
+        This needs work.. perhaps we can create one submission
+        per session, so that wer can trace back to what a user entered at
+        a particular time.
+
+        Right now all data entry every where will be associated with one id
+
+        '''
+        data_entry_doc_id = Document.objects.get(doc_title = 'Data Entry').id
+
+        try:
+            source_submission = SourceSubmission.objects.filter(document_id = \
+                data_entry_doc_id)[0]
+        except IndexError:
+            source_submission = SourceSubmission.objects.create(document_id = \
+                data_entry_doc_id, row_number = 0)
+
+        bundle.data['source_submission_id'] = source_submission.id
+
+        ## now put the unique index on the bundle ##
+        unique_index = '{}-{}-{}'.format(bundle.data['location_id'],\
+            bundle.data['indicator_id'], bundle.data['data_date'])
+        bundle.data['unique_index'] = unique_index
+
+        return bundle
+
+    def get_response_meta(self, request, objects):
+
+        meta = super(BaseModelResource, self)\
+            .get_response_meta(request, objects)
+
+        chart_uuid = request.GET.get('chart_uuid', None)
+        if chart_uuid:
+            meta['chart_uuid'] = chart_uuid
+
+        ind_id_list = request.GET.get('indicator__in', '').split(',')
+        meta['location_ids'] = [int(x) for x in self.location_ids]
+        meta['indicator_ids'] = [int(x) for x in ind_id_list]
+        meta['time_groupings'] = [x for x in self.distinct_time_groupings]
+
+        return meta
+
+
+    def apply_filters(self, request, applicable_filters):
         """
-        THis is overridden from tastypie.  The point here is to be able to
-        Set the content-disposition header for csv downloads.  That is the only
-        instance in which this override should change the response is if the
-        desired format is csv.
-        The content-disposition header allows the user to save the .csv
-        to a directory of their chosing.
-        """
-        desired_format = self.determine_format(request)
-        serialized = self.serialize(request, data, desired_format)
-
-        response = response_class(content=serialized,
-                                  content_type=build_content_type(desired_format), **response_kwargs)
-
-        if desired_format == 'text/csv':
-            response['Content-Disposition'] = 'attachment; filename=polio_data.csv'
-            response.set_cookie('dataBrowserCsvDownload', 'true')
-
-        return response
-
-    def get_list(self, request, **kwargs):
-        """
-        Overriden from Tastypie..
         """
 
-        base_bundle = self.build_bundle(request=request)
-        objects = self.obj_get_list(bundle=base_bundle)
-
-        response_meta = self.get_datapoint_response_meta(request, objects)
-        response_data = {
-            'objects': objects,
-            'meta': response_meta,
-            'error': None,
-        }
-
-        return self.create_response(request, response_data)
+        return self.get_object_list(request)
 
     def get_object_list(self, request):
         '''
@@ -126,25 +132,49 @@ class DateDatapointResource(BaseModelResource):
         response.
         '''
 
-        self.error = None
+        self.time_gb = request.GET.get('group_by_time', None)
+        self.start_date = request.GET.get('start_date', None) or \
+            request.GET.get('campaign_start', None)
+        self.end_date = request.GET.get('end_date', None) or \
+            request.GET.get('campaign_end', None)
+        self.location_id = request.GET.get('location_id', None)
+        self.location_depth = request.GET.get('location_depth', 0)
 
-        err = self.parse_url_params(request.GET)
-        if err:
-            self.error = err
+        self.location_ids = None
+        location_ids = request.GET.get('location_id__in', None)
+        if location_ids:
+            self.location_ids = location_ids.split(',')
+
+        indicator__in = request.GET.get('indicator__in', None)
+        if indicator__in:
+            self.indicator__in = indicator__in.split(',')
+
+        self.dp_df_columns = \
+            ['data_date', 'indicator_id', 'location_id', 'value']
+
+        group_by_param = request.GET.get('group_by_time', 'flat')
+        if group_by_param == 'flat':
+            self.location_ids = self.get_locations_to_return_from_url(request)
+            qs = DataPoint.objects.filter(
+                    location_id__in = self.location_ids,
+                    indicator_id__in = self.indicator__in,
+                    data_date__gte = self.start_date,
+                    data_date__lte = self.end_date
+                ).values(*self.dp_df_columns)
+            return qs
+
+        self.base_data_df = self.group_by_time_transform(request)
+
+        ## if no datapoints, we return an empty list#
+        if len(self.base_data_df) == 0:
             return []
-
-        # self.location_ids = self.get_locations_to_return_from_url(request)
-        self.time_gb = self.parsed_params['group_by_time']
-        self.base_data_df = self.group_by_time_transform()
-
-        # ## fill in missing data if requested ##
-        # if self.parsed_params['show_missing_data'] == u'1':
-        #     df = self.add_missing_data(self.base_data_df)
-        #     self.base_data_df = df.where((notnull(df)),None)
 
         return self.base_data_df.to_dict('records')
 
     def get_time_group_series(self, dp_df):
+
+        if dp_df['data_date'][0] == None:
+            raise RhizomeApiException('This is a campaign (not date) indicator')
 
         if self.time_gb == 'year':
             dp_df['time_grouping'] = dp_df[
@@ -159,75 +189,30 @@ class DateDatapointResource(BaseModelResource):
 
         ## find the unique possible groupings for this time range and gb param
         ## sketchy -- this wont work for quarter groupingings, only years.
-        distinct_time_groupings = list(dp_df.time_grouping.unique())
-        if not distinct_time_groupings:
-            start_yr, end_yr = self.parsed_params['start_date'][0:4],\
-                self.parsed_params['end_date'][0:4]
-            distinct_time_groupings = range(int(start_yr), int(end_yr))
-
-        self.parsed_params['campaign__in'] = distinct_time_groupings
+        self.distinct_time_groupings = list(dp_df.time_grouping.unique())
+        if not self.distinct_time_groupings:
+            start_yr, end_yr = self.start_date[0:4],\
+                self.end_date[0:4]
+            self.distinct_time_groupings = range(int(start_yr), int(end_yr))
 
         return dp_df
 
-    def build_location_tree(self):
-        '''
-        Find out the data you are trying to return for ... in use case #1,
-        this would be all of the provinces in afghanistan.. for #2 it would be
-        all of the districts.  This is important because we will use
-        these to group by in addition to the time_grouping and indicator
-        later on.  Furthermore, since the location tree table has all of
-        the possible combinations of ancestry, we want to make sure that
-        when we perform operations on it, that it is small as possible.
+    def handle_discrete_location_request(self):
 
-        The output of this function is a Data Frame that looks like:
+        discret_loc_dp_df_cols = self.dp_df_columns
+        discret_loc_dp_df_cols.append('id')
 
-            location_id, parent_location_id
-            | NY State      | USA       |
-            | California    | USA       |
-            | NY City       | NY State  |
-            | The Bronx     | NY City   |
+        dp_df = DataFrame(list(DataPoint.objects.filter(
+                location_id__in = self.location_ids,
+                indicator_id__in = self.indicator__in,
+                data_date__gte = self.start_date,
+                data_date__lte = self.end_date
+            ).values(*discret_loc_dp_df_cols)), columns=self.dp_df_columns)
+
+        return dp_df
 
 
-        If the depth_level = 0, it means that we want to query for only the
-        location that is in the location_id parameter, so we return somethign
-        like:
-
-            location_id, parent_location_id
-            | The Bronx | The Bronx |
-
-        '''
-
-        requested_location_id = int(self.parsed_params['location_id__in'])
-        depth_level = int(self.parsed_params['location_depth'])
-
-        if depth_level == 0:
-            self.location_ids = [ requested_location_id ]
-            return DataFrame([[requested_location_id,requested_location_id]], \
-                columns = ['location_id', 'parent_location_id'])
-
-        # what is the admin level of the requested location #
-        parent_location_admin_level =  Location.objects\
-            .filter(id = requested_location_id)\
-            .values_list('location_type__admin_level',flat=True)[0]
-
-        # what is the location_type of the keys we need to return
-        # calculated by the admin_level of the requested ( see above )
-        # and the depth level in the request
-        location_type_id_of_parent_keys = LocationType.objects\
-            .get(admin_level = parent_location_admin_level + depth_level).id
-
-        # get the relevant parent / child heirarchy
-        loc_tree_df = DataFrame(list(LocationTree.objects
-                          .filter(parent_location__location_type_id =\
-                            location_type_id_of_parent_keys)
-                          .values_list('location_id', 'parent_location_id')),
-                     columns=['location_id', 'parent_location_id'])
-
-        self.location_ids = list(loc_tree_df['location_id'].unique())
-
-        return loc_tree_df
-
-    def group_by_time_transform(self):
+    def group_by_time_transform(self, request):
         '''
             Imagine the following location tree heirarchy
             ( Country -> Region -> Province -> District )
@@ -240,206 +225,61 @@ class DateDatapointResource(BaseModelResource):
                 2. Show Polio cases in the southern Region with a bubble
                     on each district
         '''
-        dp_df_columns = ['data_date', 'indicator_id', 'location_id', 'value']
 
-        # HACKK for situational dashboard
-        if self.parsed_params['chart_uuid'] ==\
-                '5599c516-d2be-4ed0-ab2c-d9e7e5fe33be':
+        # FIXME - remove this guid and figure out better logic for this
+        chart_uuid = request.GET.get('chart_uuid', None)
+        if chart_uuid and chart_uuid == '5599c516-d2be-4ed0-ab2c-d9e7e5fe33be':
+            return custom_logic.handle_polio_case_table(self)
 
-            return self.handle_polio_case_table(dp_df_columns)
+        if self.location_ids:
+            return self.handle_discrete_location_request()
 
-        cols = ['data_date', 'indicator_id', 'location_id', 'value']
+        else:
+            loc_tree_df_columns = ['parent_location_id','location_id']
+            self.location_ids = LocationTree.objects.filter(
+                parent_location_id = self.location_id,
+                lvl = self.location_depth
+            ).values_list('location_id', flat=True)
 
-        ## build the location heirarchy for the requested locations #
-        loc_tree_df = self.build_location_tree()
+            # ## this is a hack to deal with this ticket ##
+            # # https://trello.com/c/No82UpGl
+            if len(self.location_ids) == 0:
+                self.location_ids = Location.objects.filter(
+                    parent_location_id=self.location_id,
+                ).values_list('id', flat=True)
 
-        ## now find the data for the children of those parents
-        dp_df = DataFrame(list(DataPoint.objects.filter(
-                location_id__in = list(loc_tree_df['location_id'].unique()),
-                indicator_id__in = self.parsed_params['indicator__in']
-            ).values(*cols)), columns=cols)
+            loc_tree_df = DataFrame(list(LocationTree.objects.filter(
+                parent_location_id = self.location_ids,
+            ).values_list(*loc_tree_df_columns)),columns = loc_tree_df_columns)
+
+            dp_loc_ids = [self.location_id]
+            if self.location_depth > 0:
+                    dp_loc_ids = list(loc_tree_df['location_id'].unique())
+
+            dp_df = DataFrame(list(DataPoint.objects.filter(
+                    location_id__in = dp_loc_ids,
+                    indicator_id__in = self.indicator__in,
+                    data_date__gte = self.start_date,
+                    data_date__lte = self.end_date
+                ).values(*self.dp_df_columns)), columns=self.dp_df_columns)
+
+        if len(dp_df) == 0:
+            return []
 
         dp_df = self.get_time_group_series(dp_df)
         merged_df = dp_df.merge(loc_tree_df)
 
         ## sum all values for locations with the same parent location
         gb_df = DataFrame(merged_df
-                          .groupby(['indicator_id', 'time_grouping', 'parent_location_id'])['value']
-                          .sum())\
-            .reset_index()
+              .groupby(['indicator_id', 'time_grouping', 'parent_location_id'])['value']
+              .sum())\
+              .reset_index()
 
         gb_df = gb_df.rename(columns={
             'parent_location_id': 'location_id',
-            'time_grouping': 'campaign_id' ## should change this in the FE
             })
 
         gb_df = gb_df.rename(columns={'parent_location_id': 'location_id'})
+        gb_df = gb_df.sort(['time_grouping'], ascending=[1])
 
         return gb_df
-
-    def handle_polio_case_table(self, dp_df_columns):
-        '''
-        This is a very specific peice of code that allows us to generate a table
-        with
-            - date of latest case
-            - infected district count
-            - infected province count
-        THis relies on certain calcluations to be made in
-        caluclated_indicator_component.
-        '''
-        # http://localhost:8000/api/v1/datapoint/?indicator__in=37,39,82,40&location_id__in=1&campaign_start=2015-04-26&campaign_end=2016-04-26&chart_type=RawData&chart_uuid=1775de44-a727-490d-adfa-b2bc1ed19dad&group_by_time=year&format=json
-        calc_indicator_data_for_polio_cases = CalculatedIndicatorComponent.\
-            objects.filter(indicator__name='Polio Cases').values()
-
-        if len(calc_indicator_data_for_polio_cases) > 0:
-            self.ind_meta = {'base_indicator':
-                             calc_indicator_data_for_polio_cases[
-                                 0]['indicator_id']
-                             }
-        else:
-            self.ind_meta = {}
-
-        for row in calc_indicator_data_for_polio_cases:
-            calc = row['calculation']
-            ind_id = row['indicator_component_id']
-            self.ind_meta[calc] = ind_id
-
-        parent_location_id = self.parsed_params['location_id__in']
-
-        all_sub_locations = LocationTree.objects.filter(
-            parent_location_id=parent_location_id
-        ).values_list('location_id', flat=True)
-
-        flat_df = DataFrame(list(DataPoint.objects.filter(
-            location_id__in=all_sub_locations,
-            indicator_id__in=self.parsed_params['indicator__in']
-        ).values(*dp_df_columns)), columns=dp_df_columns)
-
-        flat_df = self.get_time_group_series(flat_df)
-        flat_df['parent_location_id'] = parent_location_id
-
-        gb_df = DataFrame(flat_df
-                          .groupby(['indicator_id', 'time_grouping', 'parent_location_id'])
-                          ['value']
-                          .sum())\
-            .reset_index()
-
-        latest_date_df = DataFrame(flat_df
-                                   .groupby(['indicator_id', 'time_grouping'])['data_date']
-                                   .max())\
-            .reset_index()
-        latest_date_df['value'] = latest_date_df['data_date']\
-            .map(lambda x: x.strftime('%Y-%m-%d'))
-        latest_date_df['indicator_id'] = self\
-            .ind_meta['latest_date']
-
-        district_count_df = DataFrame(flat_df
-                                      .groupby(['time_grouping']).location_id
-                                      .nunique())\
-            .reset_index()
-        district_count_df['value'] = district_count_df['location_id']
-        district_count_df['indicator_id'] = self\
-            .ind_meta['district_count']
-
-        concat_df = concat([gb_df, latest_date_df,  district_count_df])
-        concat_df[['indicator_id', 'value', 'time_grouping', 'data_date']]
-        concat_df['parent_location_id'] = parent_location_id
-        concat_df = concat_df.drop('location_id', 1)
-        concat_df = concat_df.rename(
-            columns={'parent_location_id': 'location_id'})
-        return concat_df
-
-    def obj_get_list(self, bundle, **kwargs):
-        '''
-        Outer method for get_object_list... this calls get_object_list and
-        could be a point at which additional build_agg_rc_dfing may be applied
-        '''
-
-        objects = self.get_object_list(bundle.request)
-        if not objects:
-            objects = []
-        return objects
-
-    def get_datapoint_response_meta(self, request, data):
-        '''
-        If there is an error for this resource, add that to the response.  If
-        there is no error, than add this key, but set the value to null.  Also
-        add the total_count to the meta object as well
-        '''
-
-        meta = {}
-        try:
-            location_ids = request.GET['location_id__in']
-            meta['location_ids'] = location_ids
-        except KeyError:
-            location_ids = None
-
-        try:
-            indicator_ids = request.GET['indicator__in']
-            meta['indicator_ids'] = indicator_ids
-        except KeyError:
-            indicator_ids = None
-
-        try:
-            chart_uuid = request.GET['chart_uuid']
-            meta['chart_uuid'] = chart_uuid
-        except KeyError:
-            indicator_ids = None
-
-        meta['campaign_ids'] = self.parsed_params['campaign__in']
-
-        return meta
-
-    def dehydrate(self, bundle):
-        '''
-        This method allws me to remove or add information to each data object,
-        for instance the resource_uri.
-        '''
-
-        bundle.data.pop('resource_uri')
-
-        return bundle
-
-    # #########################
-    # ### HELPER METHODS #####
-    # #########################
-
-    def parse_url_params(self, query_dict):
-        '''
-        For the query dict return another dictionary ( or error ) in accordance
-        to the expected ( both required and optional ) parameters in the request
-        URL.
-        '''
-
-        parsed_params = {}
-
-        required_params = {'indicator__in': None}
-
-        # try to find optional parameters in the dictionary. If they are not
-        # there return the default values ( given in the dict below)
-        optional_params = {
-            'the_limit': 10000, 'the_offset': 0, 'agg_level': 'mixed',
-            'start_date': '2012-01-01', 'end_date': '2016-12-31',
-            'campaign__in': None, 'location__in': None, 'location_id__in': None,
-            'filter_indicator': None, 'filter_value': None,
-            'show_missing_data': None, 'cumulative': 0,
-            'group_by_time': None, 'chart_uuid': None, 'location_depth': 0
-        }
-
-        for k, v in optional_params.iteritems():
-            try:
-                parsed_params[k] = query_dict[k]
-            except KeyError:
-                parsed_params[k] = v
-
-        for k, v in required_params.iteritems():
-
-            try:
-                parsed_params[k] = [int(p) for p in query_dict[k].split(',')]
-            except KeyError as err:
-                err_msg = '%s is a required parameter!' % err
-                return err_msg, None
-
-        self.parsed_params = parsed_params
-
-        return None

@@ -1,28 +1,20 @@
-from django.shortcuts import render_to_response, get_object_or_404, redirect
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.core.urlresolvers import reverse_lazy, reverse, resolve
+from django.shortcuts import render_to_response
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.urlresolvers import reverse_lazy, resolve
 from django.views import generic
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import user_passes_test
-from django.template import Template, context, RequestContext
+from django.template import RequestContext
 from django.conf import settings
 
-from rhizome.models import *
-from rhizome.forms import *
+from rhizome.models.dashboard_models import CustomDashboard
+
+from rhizome.forms import UserCreateForm, UserEditForm
 from rhizome.mixins import PermissionRequiredMixin
 
 from rhizome.pdf_utils import print_pdf
-from waffle.decorators import waffle_switch
 from rhizome.settings.base import STATICFILES_DIRS
 
-
-def react_app(request):
-
-    print '==request=='
-    print request.path
-
-    return render_to_response('react_app.html',\
-        context_instance=RequestContext(request))
 
 def about(request):
     html = settings.ABOUT_HTML
@@ -76,7 +68,7 @@ def dashboards(request):
                               context_instance=RequestContext(request))
 
 
-def dashboard_create(request, dashboard_id=None):
+def dashboard_create(request):
     return render_to_response('dashboards/create.html',
                               context_instance=RequestContext(request))
 
@@ -106,60 +98,52 @@ def chart(request, chart_id=None):
     return render_to_response('charts/show.html', {'chart_id': chart_id},
                               context_instance=RequestContext(request))
 
-# OTHER
-#----------------------------------------------------------------------------
-
-
-def source_data(request):
-    return render_to_response('source-data/index.html',
-                              context_instance=RequestContext(request))
-
-
-def update_campaign(request):
-    return render_to_response('manage_system.html',
-                              context_instance=RequestContext(request))
-
-
 #############################################################################
 #                                                                           #
 #                              RESTRICTED VIEWS                             #
 #                                                                           #
 #############################################################################
 
-
-# RESOURCES
-#---------------------------------------------------------------------------
 @user_passes_test(lambda u: u.groups.filter(name='chart_edit') or u.is_superuser,
-                  login_url='/permissions_needed/', redirect_field_name=None)
+                  login_url='/permissions_needed', redirect_field_name=None)
 def chart_edit(request, chart_id=None):
     return render_to_response('charts/show.html', {'chart_id': chart_id},
                               context_instance=RequestContext(request))
 
 
-class DashBoardView(generic.ListView):
-    paginate_by = 50
-    template_name = 'dashboards/index.html'
-    context_object_name = 'user_dashboard'
-
-    def get_queryset(self):  # not sure why this works. ##
-        return DataPoint.objects.all()[:1]
-
-# OTHER
 #----------------------------------------------------------------------------
-
+@user_passes_test(lambda u: u.groups.filter(name='react_app') or u.is_superuser,
+                  login_url='/permissions_needed', redirect_field_name=None)
+def react_app(request):
+    return render_to_response('react_app.html',\
+        context_instance=RequestContext(request))
 
 @user_passes_test(lambda u: u.groups.filter(name='data_entry') or u.is_superuser,
-                  login_url='/permissions_needed/', redirect_field_name=None)
+                  login_url='/permissions_needed', redirect_field_name=None)
 def data_entry(request):
     return render_to_response('data-entry/index.html',
                               context_instance=RequestContext(request))
 
 
-@user_passes_test(lambda u: u.groups.filter(name='manage_system') or u.is_superuser,
-                  login_url='/permissions_needed/', redirect_field_name=None)
+@user_passes_test(lambda u: u.groups.filter(name='source-data') or u.is_superuser,
+                  login_url='/permissions_needed', redirect_field_name=None)
+def source_data(request):
+    return render_to_response('source-data/index.html',
+                              context_instance=RequestContext(request))
+
+
+@user_passes_test(lambda u: u.groups.filter(name='manage-system') or u.is_superuser,
+                  login_url='/permissions_needed', redirect_field_name=None)
 def manage_system(request):
     return render_to_response('manage_system.html',
                               context_instance=RequestContext(request))
+
+@user_passes_test(lambda u: u.groups.filter(name='manage-system') or u.is_superuser,
+                  login_url='/permissions_needed', redirect_field_name=None)
+def update_campaign(request):
+    return render_to_response('manage_system.html',
+        context_instance=RequestContext(request))
+
 
 
 class UserCreateView(PermissionRequiredMixin, generic.CreateView):
@@ -170,7 +154,7 @@ class UserCreateView(PermissionRequiredMixin, generic.CreateView):
     def get_success_url(self):
         new_user_id = self.object.id
 
-        return reverse_lazy('datapoints:user_update',
+        return reverse_lazy('user_update',
                             kwargs={'pk': new_user_id})
 
 
@@ -184,24 +168,18 @@ class UserEditView(PermissionRequiredMixin, generic.UpdateView):
 
     def get_success_url(self):
         requested_user_id = self.get_object().id
-        return reverse_lazy('datapoints:user_update',
+        return reverse_lazy('user_update',
                             kwargs={'pk': requested_user_id})
 
     def get_context_data(self, **kwargs):
-        context = super(UserEditView, self).get_context_data(**kwargs)
+        view_context = super(UserEditView, self).get_context_data(**kwargs)
         user_obj = self.get_object()
-        context['user_id'] = user_obj.id
+        view_context['user_id'] = user_obj.id
 
-        return context
+        return view_context
 
     def form_valid(self, form):
         new_user = form.save()
-        # set the user location permission just use the ajax call.
-        # permission_obj = UserAdminLevelPermission.objects.get(user=new_user)
-        # user_location_permission = LocationPermission.objects.get(user=new_user)
-        # location = Location.objects.get(id=user_location_permission.top_lvl_location_id)
-        # permission_obj.location_type = location.location_type
-        # permission_obj.save()
         return HttpResponseRedirect(self.get_success_url())
 
 
@@ -237,5 +215,5 @@ def debug(request):
     accept += ",application/json"
     request.META["HTTP_ACCEPT"] = accept
 
-    res = view.func(request, **view.kwargs)
-    return HttpResponse(res._container)
+    response = view.func(request, **view.kwargs)
+    return HttpResponse(response_container)

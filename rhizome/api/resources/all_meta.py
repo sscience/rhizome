@@ -1,7 +1,13 @@
 from tastypie import fields
-from rhizome.api.resources.base_non_model import BaseNonModelResource
-from rhizome.models import Campaign, CustomChart, CustomDashboard, Indicator, IndicatorTag, IndicatorToTag, Location, Office, User
+from django.contrib.auth.models import User
 
+from rhizome.api.resources.base_non_model import BaseNonModelResource
+from rhizome.models.campaign_models import Campaign
+from rhizome.models.indicator_models import Indicator, IndicatorTag, \
+    IndicatorToTag
+from rhizome.models.location_models import Location
+# from rhizome.models.document_models import * # FIXME
+from rhizome.models.dashboard_models import CustomChart, CustomDashboard
 
 class AllMetaResult(object):
     campaigns = list()
@@ -11,7 +17,6 @@ class AllMetaResult(object):
     indicator_tags = list()
     indicators_to_tags = list()
     locations = list()
-    offices = list()
     is_superuser = bool()
 
 
@@ -35,9 +40,6 @@ class AllMetaResource(BaseNonModelResource):
         object_class = AllMetaResult
         resource_name = 'all_meta'
 
-    def obj_get_list(self, bundle, **kwargs):
-        return self.get_object_list(bundle.request)
-
     def get_object_list(self, request):
         qs = []
         am_result = AllMetaResult()
@@ -55,10 +57,8 @@ class AllMetaResource(BaseNonModelResource):
             list(IndicatorToTag.objects.all().values())
 
         am_result.locations = list(Location.objects.all().values())
-        am_result.offices = \
-            [o for o in Office.objects.all().values()]
         am_result.is_superuser = User.objects.get(
             id=request.user.id).is_superuser
         qs.append(am_result)
 
-        return qs
+        return [x.__dict__ for x in qs]

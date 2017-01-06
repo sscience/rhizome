@@ -1,15 +1,17 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
+
 from pandas import read_csv
-from rhizome.models import LocationType, Location, LocationTree, LocationPolygon, LocationPermission
 from pandas import DataFrame
 from pandas import Series
 from pandas import read_csv
+
+from rhizome.models.location_models import LocationType, Location,\
+    LocationTree, LocationPolygon, LocationPermission
 from rhizome.cache_meta import minify_geo_json
 
-from pprint import pprint
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
 
-class GeoResourceTest(RhizomeAPITestCase):
+class GeoResourceTest(RhizomeApiTestCase):
     def setUp(self):
         super(GeoResourceTest, self).setUp()
 
@@ -19,7 +21,6 @@ class GeoResourceTest(RhizomeAPITestCase):
         self.distr, created = \
             LocationType.objects.get_or_create(name='District',admin_level = 2)
 
-        self.o = self.ts.create_arbitrary_office()
         self.planet_location_type = LocationType.objects\
             .create(name = 'Planet', admin_level = 0)
 
@@ -27,7 +28,6 @@ class GeoResourceTest(RhizomeAPITestCase):
             id = 1,
             name = 'Earth',
             location_code = 'Earth',
-            office_id = self.o.id,
             location_type_id = self.planet_location_type.id
         )
 
@@ -65,8 +65,9 @@ class GeoResourceTest(RhizomeAPITestCase):
 
 
     def test_get_geo(self):
-        get_data ={'location_id__in':6, 'location_depth':1}
+        get_data ={'location_id':6, 'location_depth':1}
         resp = self.ts.get(self, '/api/v1/geo/', get_data)
         self.assertHttpOK(resp)
-        self.deserialize(resp)
-        self.assertEqual(len(self.deserialize(resp)['features']), 5)
+        response_data = self.deserialize(resp)
+        response_objects = response_data['objects']
+        self.assertEqual(len(response_objects), 5)

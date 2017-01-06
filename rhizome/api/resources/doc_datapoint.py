@@ -1,6 +1,8 @@
-from rhizome.api.resources.base_model import BaseModelResource
-from rhizome.models import DocDataPoint
+from tastypie.resources import ALL
+from tastypie import fields
 
+from rhizome.api.resources.base_model import BaseModelResource
+from rhizome.models.datapoint_models import DocDataPoint
 
 class DocDataPointResource(BaseModelResource):
     '''
@@ -12,15 +14,12 @@ class DocDataPointResource(BaseModelResource):
         - if an invalid document_id is provided, API returns an empty list
     '''
 
+    document_id = fields.IntegerField(attribute='document_id')
+
     class Meta(BaseModelResource.Meta):
-        resource_name = 'doc_datapoint'
-
-    def get_object_list(self, request):
-
-        queryset = DocDataPoint.objects.filter(
-            document_id=request.GET['document_id'],
-            # campaign_id=campaign_id,
-            # location_id__in=all_location_ids,
-        )[:50].values('location__name', 'indicator__short_name', 'campaign__name', 'value')
-
-        return queryset
+        resource_name = 'doc_datapoint' ##FIXME this is not used anywhere
+        object_class = DocDataPoint
+        GET_params_required = ['document_id']
+        filtering = {
+            'document_id': ALL
+        }

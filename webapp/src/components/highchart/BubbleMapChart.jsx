@@ -10,6 +10,22 @@ class BubbleMap extends HighChart {
       legend: {
         enabled: false
       },
+      exporting: {
+        buttons: {
+          customButton: {
+            text: 'Labels',
+            onclick: this._toggleLabels,
+            x: -65,
+            y: -30,
+            theme: {
+              style: {
+                color: '#039',
+                textDecoration: 'underline'
+              }
+            }
+          }
+        }
+      },
       mapNavigation: {
         enabled: false,
         enableTouchZoom: false,
@@ -35,6 +51,14 @@ class BubbleMap extends HighChart {
       mapData: {'features': this.props.features, 'type': 'FeatureCollection'},
       data: props.datapoints.flattened.map(d => ({z: d.value, location_id: d.location.id})),
       joinBy: 'location_id',
+      dataLabels: {
+        enabled: false,
+        color: '#000',
+        formatter: function () {
+          const value = format.autoFormat(this.point.z, current_indicator.data_format, 1)
+          return props.locations_index[this.point.location_id].name + '<br>' + value
+        }
+      },
       minSize: 4,
       maxSize: '12%',
       color: color,
@@ -48,6 +72,13 @@ class BubbleMap extends HighChart {
         }
       }
     }]
+  }
+
+  _toggleLabels = () => {
+    const self = this
+    var opt = this.chart.series[1].options;
+    opt.dataLabels.enabled = !opt.dataLabels.enabled;
+    this.chart.series[1].update(opt);
   }
 }
 

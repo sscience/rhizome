@@ -1,4 +1,4 @@
-.. polio documentation master file, created by
+.. rhizome documentation master file, created by
    sphinx-quickstart on Mon Jul 28 14:42:24 2014.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
@@ -6,42 +6,60 @@
 Rhizome Documentation
 *********************
 
-Contents:
-
 .. toctree::
    :hidden:
    :maxdepth: 2
 
-   user-guide/build_docs
-   user-guide/userGuide
-   development/initialize
-   development/coding_standards
-   development/tests
-   deploy/initialize
-   back-end/backendComponents
-   back-end/aggregationDetail
-   back-end/api
+   about/index
+   user-guide/index
+   back-end/index
+   front-end/index
+   testing/index
+   api/api
+
+About
+------
+- :doc:`about/background`
+- :doc:`about/functionality`
+- :doc:`about/stack`
 
 User Guide
 ----------
-- :doc:`user-guide/build_docs`
-- :doc:`user-guide/userGuide`
+- :doc:`user-guide/uploader`
+- :doc:`user-guide/chart_builder`
+- :doc:`user-guide/dashboard_builder`
 
-Development
------------
-- :doc:`development/initialize`
-- :doc:`development/coding_standards`
-- :doc:`development/tests`
+Back End Code
+--------------
+- :doc:`back-end/data_model`
+- :doc:`back-end/model_methods`
+- :doc:`back-end/migrations`
+- :doc:`back-end/build_docs`
 
-Deploy
-------
-- :doc:`deploy/initialize`
+Front End Code
+--------------
+- :doc:`front-end/manage_system`
+- :doc:`front-end/chart_builder`
+- :doc:`front-end/dashboard_builder`
+- :doc:`front-end/source_data`
+- :doc:`front-end/gulp`
 
-Back-end details
-----------------
-- :doc:`back-end/backendComponents`
-- :doc:`back-end/aggregationDetail`
-- :doc:`back-end/api`
+Testing
+----------
+.. Running Tests and Building Coverage
+- :doc:`testing/back_end`
+- :doc:`testing/front_end`
+- :doc:`testing/test_plan`
+
+API
+---
+- :doc:`api/api`
+.. Tastypie and Base Resources
+.. Model Resources
+.. Non Model Resources
+.. Individual Resource Descriptions
 
 
-* :ref:`search`
+What we don’t have and Next Steps
+---------------------------------
+- :doc:`next-steps/full_app_spec`

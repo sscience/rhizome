@@ -1,22 +1,14 @@
 #!/usr/bin/env python
-import csv
-import json
-import urllib2
-import urllib
-import httplib
+
 from subprocess import Popen, PIPE
 import base64
-from datetime import datetime
-from urllib2 import Request, urlopen
-from urllib import urlencode
 
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 
-from rhizome.models import Document, DocDetailType, DocumentDetail
-from rhizome.etl_tasks.transform_upload import DocTransform
-
+from rhizome.models.document_models import Document, DocDetailType, \
+    DocumentDetail
 
 class OdkJarFileException(Exception):
     # defaultMessage = "Sorry, this request could not be processed."
@@ -34,8 +26,11 @@ class OdkJarFileException(Exception):
 
         if "form ID doesn't exist on server" in java_message:
 
-            self.errorMessage = 'form id "{0}" does not exists on this server.\n\n Please check: \n\n {1}/Aggregate.html#management/forms/ \n\n and ensure that the FORM_ID you entered is correct. '.format(kwargs[
-                                                                                                                                                                                                             'odk_form_name'], kwargs['odk_aggregate_url'])
+            self.errorMessage = 'form id: \\\
+                "{0}" does not exists on this server.\n\n Please check: \n\n \\\
+                 {1}/Aggregate.html#management/forms/ \n\n and ensure that\\\
+                 the FORM_ID you entered is correct. '\
+            .format(kwargs['odk_form_name'], kwargs['odk_aggregate_url'])
 
         else:
             self.errorMessage = message
@@ -121,15 +116,11 @@ class OdkSync(object):
         return doc.id
 
     def refresh_file_data(self, document_id):
+        document_object = Document.ojects.get(id = document_id)
+        document_object.transform_upload()
+        document_object.refresh_master()
 
-        try:
-            dt = DocTransform(self.user_id, document_id)
-            data = dt.main()
-        except ObjectDoesNotExist as err:
-            ## means required configs arent available ##
-            data = {}
-
-        return data
+        return document_object.id
 
     def get_forms_to_process(self):
         '''

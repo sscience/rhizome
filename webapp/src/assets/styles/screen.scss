@@ -15,9 +15,11 @@
 @import "menu";
 @import "buttons";
 @import "navigation";
+@import "hacks";
 @import "dashboards";
 @import "multi-chart";
 @import "notifications";
+@import "multi-select-list";
 @import "dashboards-redesign";
 @import "dashboard-builder";
 @import "radio-group";
@@ -35,6 +37,13 @@
 @import "rw-dateTimePicker";
 @import "csv-upload";
 @import "footer";
+@import "headers/data-entry-header";
+@import "tables/data-entry-table";
+@import "vendor/ag-grid";
+@import "vendor/nprogress";
+@import "vendor/theme-blue";
+@import "vendor/theme-dark";
+@import "vendor/theme-fresh";
 
 $break-small: 340px;
 $break-large: 1300px;
@@ -67,6 +76,10 @@ body {
 
 #management-dashboard {
   background-color: $rhz-dashboard-bg-color;
+}
+
+main[role="main"] {
+  padding-bottom: 4rem;
 }
 
 #main {
@@ -398,13 +411,6 @@ ul {
 
     .arrow {
       border-bottom-color: $gainsboro !important;
-    }
-  }
-
-  li.campaign {
-    .office {
-      color: $jumbo;
-      font-weight: bold;
     }
   }
 

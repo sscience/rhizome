@@ -1,10 +1,10 @@
-from base_test_case import RhizomeAPITestCase
-from setup_helpers import TestSetupHelpers
-from rhizome.models import IndicatorTag
-from rhizome.models import IndicatorToTag
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.tests.setup_helpers import TestSetupHelpers
+from rhizome.models.indicator_models import IndicatorTag, IndicatorToTag
 
 
-class IndicatorToTagResourceTest(RhizomeAPITestCase):
+
+class IndicatorToTagResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(IndicatorToTagResourceTest, self).setUp()
@@ -12,10 +12,8 @@ class IndicatorToTagResourceTest(RhizomeAPITestCase):
         self.ts = TestSetupHelpers()
 
         self.lt = self.ts.create_arbitrary_location_type()
-        self.o = self.ts.create_arbitrary_office()
-
         self.top_lvl_location = self.ts.create_arbitrary_location(
-            self.lt.id, self.o.id)
+            self.lt.id)
         self.ind_tag = IndicatorTag.objects.create(tag_name='a tag')
         self.ind = self.ts.create_arbitrary_indicator()
 
@@ -81,6 +79,6 @@ class IndicatorToTagResourceTest(RhizomeAPITestCase):
         ind_to_tag = IndicatorToTag.objects.create(indicator_id=self.ind.id,
                                                    indicator_tag_id=self.ind_tag.id)
         self.assertEqual(IndicatorToTag.objects.count(), 1)
-        delete_url = '/api/v1/indicator_to_tag/?id=' + str(ind_to_tag.id)
+        delete_url = '/api/v1/indicator_to_tag/%s/' % str(ind_to_tag.id)
         self.ts.delete(self, delete_url)
         self.assertEqual(IndicatorToTag.objects.count(), 0)

@@ -13,6 +13,8 @@ export default {
     // { name: 'ScatterChart', groupBy: false, locationLevel: true, timeRadios: ['1month'] },
     // { name: 'PieChart', groupBy: false, locationLevel: true, timeRadios: ['1month'] }
   ],
+  // single_campaign_charts: ['TableChart', 'MapChart', 'BubbleMap'],
+  single_campaign_charts: ['TableChart', 'MapChart'], //, 'BubbleMap'],
   grouped_charts: ['LineChart', 'ColumnChart', 'RawData'],
   multi_location_charts: ['TableChart', 'MapChart', 'BubbleMap', 'ColumnChart'],
   need_missing_data_charts: ['TableChart', 'RawData', 'ColumnChart'],
@@ -56,17 +58,6 @@ export default {
       value: 'selected',
       title: 'Selected location only',
       getAggregated: (locationSelected, locationIndex) => locationSelected
-    },
-    {
-      value: 'type',
-      title: 'Locations with the same level',
-      getAggregated: (locationSelected, locationIndex) => {
-        return _.filter(locationIndex,
-          (locationSelected.parent_location_id && locationSelected.parent_location_id !== 'None')
-            ? { location_type_id: locationSelected.location_type_id, office_id: locationSelected.office_id }
-            : { location_type_id: locationSelected.location_type_id }
-        )
-      }
     },
     {
       value: 'sublocations',

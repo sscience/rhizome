@@ -1,12 +1,14 @@
-from base_test_case import RhizomeAPITestCase
 from django.contrib.auth.models import User
-from rhizome.models import CustomDashboard, CustomChart, LocationPermission,\
-    Location, LocationType, Office
+
+from rhizome.tests.base_test_case import RhizomeApiTestCase
+from rhizome.models.dashboard_models import CustomDashboard, CustomChart
+from rhizome.models.location_models import LocationPermission,Location, \
+    LocationType
 
 import json
 
 
-class DashboardResourceTest(RhizomeAPITestCase):
+class DashboardResourceTest(RhizomeApiTestCase):
 
     def setUp(self):
         super(DashboardResourceTest, self).setUp()
@@ -18,13 +20,11 @@ class DashboardResourceTest(RhizomeAPITestCase):
                                              'john@john.com', self.password)
 
         self.lt = LocationType.objects.create(name='test', admin_level=0)
-        self.o = Office.objects.create(name='Earth')
 
         self.top_lvl_location = Location.objects.create(
             name='Nigeria',
             location_code='Nigeria',
-            location_type_id=self.lt.id,
-            office_id=self.o.id,
+            location_type_id=self.lt.id
         )
 
         LocationPermission.objects.create(user_id=self.user.id,
@@ -53,11 +53,11 @@ class DashboardResourceTest(RhizomeAPITestCase):
 
     def test_dashboard_post_rows(self):
         dboard_title = 'the dashboard title'
-        dboard_rows = json.dumps([{'charts': ['fdfdf'], 'layout':1}, {
-                                 'charts': ['ddsds'], 'layout':2}])
+        dboard_rows = [{'charts': ['fdfdf'], 'layout':1}, {
+                                 'charts': ['ddsds'], 'layout':2}]
         post_data = {
             'title': dboard_title,
-            'rows': dboard_rows
+            'rows': json.dumps(dboard_rows)
         }
         resp = self.api_client.post('/api/v1/custom_dashboard/', format='json',
                                     data=post_data, authentication=self.get_credentials())
@@ -65,7 +65,7 @@ class DashboardResourceTest(RhizomeAPITestCase):
         self.deserialize(resp)
         self.assertEqual(CustomDashboard.objects.count(), 1)
         dboard = CustomDashboard.objects.get(title=dboard_title)
-        self.assertEqual(json.dumps(dboard.rows), dboard_rows)
+        self.assertEqual(dboard.rows, dboard_rows)
 
     def test_dashboard_post_no_params(self):
         resp = self.api_client.post('/api/v1/custom_dashboard/', format='json',
@@ -73,16 +73,20 @@ class DashboardResourceTest(RhizomeAPITestCase):
         self.assertHttpApplicationError(resp)
 
     def test_dashboard_chart_post(self):
+        '''
+        Create two charts and add them to a new dashboard with a POST request
+        '''
 
         ## create two charts ##
         c1 = CustomChart.objects.create(uuid='a', title='a', chart_json='')
         c2 = CustomChart.objects.create(uuid='b', title='b', chart_json='')
 
         dashboard_title = '2 Chart Dashboard'
-        chart_uuids = '%s,%s' % (c1.uuid, c2.uuid)
+
+        row_list_object = [{"layout":4,"charts":[c1.uuid, c2.uuid]}]
         post_data = {
             'title': dashboard_title,
-            'chart_uuids': chart_uuids
+            'rows': json.dumps(row_list_object)
         }
 
         ## post the dashboard title and the associated charts to the API ##
@@ -96,14 +100,10 @@ class DashboardResourceTest(RhizomeAPITestCase):
 
         self.assertHttpCreated(resp)
         self.assertEqual(response_data['title'], dashboard_title)
-        self.assertEqual(response_data['chart_uuids'].split(
-            ','), [c1.uuid, c2.uuid])
+        self.assertEqual(response_data['rows'], row_list_object)
 
     def test_dashboard_name_exist(self):
-        dashboard_name = "test the already exists"
-
-        CustomDashboard.objects.all().delete()
-        self.assertEqual(CustomDashboard.objects.count(), 0)
+        dashboard_name = "this exists"
 
         post_data = {'title': dashboard_name}
         resp = self.api_client.post('/api/v1/custom_dashboard/', format='json',
@@ -115,9 +115,11 @@ class DashboardResourceTest(RhizomeAPITestCase):
         response_data = self.deserialize(resp)
 
         self.assertHttpApplicationError(resp)
-        self.assertEqual(CustomDashboard.objects.count(), 1)
-        self.assertEqual('the custom dashboard "{0}" already exists'.format(
-            dashboard_name), response_data['error'])
+
+        expected_error_msg = 'key: "title" with value: "{0}" already exists'\
+            .format(dashboard_name)
+
+        self.assertEqual(expected_error_msg, response_data['error'])
 
     def test_dashboard_get_no_params(self):
         d1 = CustomDashboard.objects.create(title="1 d-board")
@@ -193,11 +195,14 @@ class DashboardResourceTest(RhizomeAPITestCase):
         delete_url = '/api/v1/custom_dashboard/%s/' % str(dashboard.id)
 
         resp = self.api_client.delete(
-            delete_url, format='json', data={}, authentication=self.get_credentials())
+            delete_url, format='json', data={}, \
+            authentication=self.get_credentials())
 
         self.assertEqual(CustomDashboard.objects.count(), 0)
 
     # TODO: test for duplicate dashboard
+    # def test_duplicate_dashboard(self):
+    #   pass
 
     def test_dashboard_json(self):
                 ## create two charts ##
@@ -223,19 +228,19 @@ class DashboardResourceTest(RhizomeAPITestCase):
                     json_obj = json.loads(json_obj)
                 except:
                     print "expected json object, got a %s for obj:" %str(type(json_obj))
-                    print json_obj
                     self.assertTrue(False)
         self.assertTrue(True)
-
 
     def test_delete_dashboard(self):
         dashboard_name = 'some d-board!'
         dashboard = CustomDashboard.objects.create(
             title=dashboard_name, layout=1)
+
         self.assertEqual(CustomDashboard.objects.count(), 1)
 
-        delete_url = '/api/v1/custom_dashboard/?id=' + str(dashboard.id)
+        delete_url = '/api/v1/custom_dashboard/%s/' % str(dashboard.id)
 
         resp = self.api_client.delete(
             delete_url, format='json', data={}, authentication=self.get_credentials())
+
         self.assertEqual(CustomDashboard.objects.count(), 0)

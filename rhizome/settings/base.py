@@ -25,7 +25,7 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'webapp/public/static')
 ]
 
-LOGIN_REDIRECT_URL = '/datapoints'
+LOGIN_REDIRECT_URL = '/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -59,7 +59,6 @@ INSTALLED_APPS = (
     'tastypie',
     'corsheaders',
     'debug_toolbar',
-    'django_cron',
     'waffle'
 )
 
@@ -89,12 +88,6 @@ DEBUG_TOOLBAR_PANELS = (
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # this is default
 )
-
-CRON_CLASSES = [
-    "rhizome.cron.AggAndComputeDataPoint",
-    "rhizome.cron.MasterRefreshJob",
-    "rhizome.cron.MetaRefreshJob",
-]
 
 ANONYMOUS_USER_ID = -1
 

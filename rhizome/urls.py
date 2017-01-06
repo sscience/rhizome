@@ -16,22 +16,31 @@ from rhizome import views
 
 admin.autodiscover()
 
-# TASTYPIE Endpoints
-#---------------------------------------------------------------------------
+# import pkgutil
+#
+# # this is the package we are inspecting -- for example 'email' from stdlib
+# import email
+#
+# package = email
+# for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
+#     print "Found submodule %s (is a package: %s)" % (modname, ispkg)
+
+######################
+# TASTYPIE Endpoints #
+######################
+
 v1_api = Api(api_name='v1')
+
 v1_api.register(agg_refresh.AggRefreshResource())
 v1_api.register(cache_meta.CacheMetaResource())
 v1_api.register(
     calculated_indicator_component.CalculatedIndicatorComponentResource())
 v1_api.register(campaign.CampaignResource())
 v1_api.register(campaign_type.CampaignTypeResource())
-v1_api.register(chart_type.ChartTypeResource())
-v1_api.register(computed_datapoint.ComputedDataPointResource())
 v1_api.register(custom_chart.CustomChartResource())
 v1_api.register(custom_dashboard.CustomDashboardResource())
-v1_api.register(campaign_datapoint.CampaignDatapointResource())
+v1_api.register(campaign_datapoint.CampaignDataPointResource())
 v1_api.register(date_datapoint.DateDatapointResource())
-v1_api.register(datapoint_entry.DatapointEntryResource())
 v1_api.register(doc_datapoint.DocDataPointResource())
 v1_api.register(doc_detail_type.DocDetailTypeResource())
 v1_api.register(doc_trans_form.DocTransFormResource())
@@ -45,16 +54,16 @@ v1_api.register(indicator_to_tag.IndicatorToTagResource())
 v1_api.register(location_permission.LocationPermissionResource())
 v1_api.register(location.LocationResource())
 v1_api.register(location_type.LocationTypeResource())
-v1_api.register(office.OfficeResource())
 v1_api.register(queue_process.QueueProcessResource())
 v1_api.register(refresh_master.RefreshMasterResource())
 v1_api.register(source_object_map.SourceObjectMapResource())
-v1_api.register(source_object_to_map.SourceObjectToMapResource())
 v1_api.register(source_submission.SourceSubmissionResource())
 v1_api.register(sync_odk.SyncOdkResource())
 v1_api.register(user_group.UserGroupResource())
 v1_api.register(user.UserResource())
 v1_api.register(all_meta.AllMetaResource())
+v1_api.register(date_doc_results.DateDocResultResource())
+v1_api.register(campaign_doc_results.CampaignDocResultResource())
 
 
 protected_patterns = [
@@ -80,7 +89,7 @@ protected_patterns = [
 
     url(r'^dashboards/$', views.dashboards, name='dashboards'),
     url(r'^dashboards/create$', views.dashboard_create, name='dashboard_create'),
-    url(r'^dashboards/(?P<dashboard_id>[0-9]+)$', views.dashboard, name='dashboard'),
+    url(r'^dashboards/(?P<dashboard_id>[0-9]+)', views.dashboard, name='dashboard'),
 
     ## react app -- some day this will be the only ( non api ) url ##
     url(r'^react_app', views.react_app, name='react_app'),
@@ -104,8 +113,6 @@ urlpatterns = patterns(
 
 if settings.DEBUG:
     import debug_toolbar
-    # urlpatterns += patterns('',
-    #     url(r'^debug/', include(debug_toolbar.urls)),
     urlpatterns += patterns(
         '',
         url(r'^api_debug/', api_debug),
