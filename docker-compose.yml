@@ -13,7 +13,10 @@ db:
   image: postgres:9.3
   ports:
     - 5432:5432
+  env_file:
+  - .env-example
   environment:
     POSTGRES_DB: rhizome
     POSTGRES_USER: djangoapp
     POSTGRES_PASSWORD: w3b@p01i0
+    SECRET_KEY: 1234mxmxmxmxm

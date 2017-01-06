@@ -32,7 +32,7 @@ LOGIN_REDIRECT_URL = '/'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv(
-    'SECRET_KEY', '7i_%j5chyhx2k3#874-!8kwwlcr88sn9blbsb7$%58h&t#n84f')
+    'SECRET_KEY', os.getenv('SECRET_KEY','some_secret_key'))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -109,19 +109,26 @@ DATABASES = {
     }
 }
 
+## we allow for connection either KOBO or APP ENGINE aggregate backends
 ODK_SETTINGS = {
-    # download here:
-    # https://opendatakit.org/downloads/download-info/odk-briefcase/
-    'JAR_FILE': '',
-    'RHIZOME_USERNAME': '',
-    # 'get an API key.. http://stackoverflow.com/questions/10940983/
-    'RHIZOME_KEY': '',
-    'STORAGE_DIRECTORY': '',  # /my/storage/dir',
-    'EXPORT_DIRECTORY': '',  # ' /my/output/dir,
-    'ODK_USER': '',  # my_odk_username
-    'ODK_PASS': '',  # my_odk_password
-    'AGGREGATE_URL': '',  # :'https://my-odk-server.appspot.com/',
-    'API_ROOT': 'http://localhost:8000/api/v1/',
+    'kobo': {
+        'KOBO_KEY': os.getenv('KOBO_KEY'),
+        'KOBO_SECRET': os.getenv('KOBO_KEY'),
+    },
+    'app_engine':{
+        # download here:
+        # https://opendatakit.org/downloads/download-info/odk-briefcase/
+        'JAR_FILE': '',
+        'RHIZOME_USERNAME': '',
+        # 'get an API key.. http://stackoverflow.com/questions/10940983/
+        'RHIZOME_KEY': '',
+        'STORAGE_DIRECTORY': '',  # /my/storage/dir',
+        'EXPORT_DIRECTORY': '',  # ' /my/output/dir,
+        'ODK_USER': '',  # my_odk_username
+        'ODK_PASS': '',  # my_odk_password
+        'AGGREGATE_URL': '',  # :'https://my-odk-server.appspot.com/',
+        'API_ROOT': 'http://localhost:8000/api/v1/',
+    }
 }
 
 
@@ -189,6 +196,6 @@ FLAG_DATA = True
 
 ## for a new instance -- put the 2 letter codes cooresponding to the countries
 ## you want to ingest maps for.  See here for more info http://code.highcharts.com/mapdata/
-COUNTRY_LIST = ['lb'] ##, 'sy']
+COUNTRY_LIST = os.getenv('COUNTRY_SHAPE_LIST', '').split(',')
 ## . 'http://code.highcharts.com/mapdata/countries/lb/lb-all.geo.json'
 ## . 'http://code.highcharts.com/mapdata/countries/sy/sy-all.geo.json'
