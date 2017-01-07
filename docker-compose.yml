@@ -20,3 +20,11 @@ db:
     POSTGRES_USER: djangoapp
     POSTGRES_PASSWORD: w3b@p01i0
     SECRET_KEY: 1234mxmxmxmxm
+
+# fe:
+#   build: webapp
+#   volumes:
+#     - ./webapp:/code/webapp
+#   env_file:
+#     - .env-example
+#   command: gulp dev
