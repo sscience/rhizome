@@ -3,7 +3,7 @@ rhizome:
   links:
     - db:postgres
   ports:
-    - 8000:8000
+    - 9090:9090
   volumes:
     - .:/rhizome
   working_dir: /rhizome

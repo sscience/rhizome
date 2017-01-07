@@ -58,9 +58,11 @@ To Enter Docker Web Server Container running Django
 $ docker exec -it rhizome_rhizome_1 bash
 ```
 
-While inside the docker web instance, create a superuser in order to login
+While inside the docker web instance, migrate the database and create a superuser in order to login
 
 ```
+root@4d3814881439:/rhizome# ./manage.py migrate
+
 root@4d3814881439:/rhizome# ./manage.py createsuperuser
 ```
 
@@ -91,14 +93,6 @@ $ npm install
 $ gulp dev
 ```
 
-And in order to get the NEW .js working
-
-```
-$ cd react_app
-$ npm install
-$ webpack -d --watch
-```
-
 If either of these commands do not work, then please ensure you have the proper `node` and `npm` versions installed.
 
 # Serving the Django Application with Apache.
@@ -123,3 +117,10 @@ Start here by checking out our [documentation](http://unicef.github.io/rhizome/)
 
 # Style
 For python style guide and instructions on how to configure your editor in alignment with our linter config see the [plylintrc file](https://github.com/unicef/rhizome/blob/dev/rhizome/pylintrc)
+
+
+# To Do
+
+- Put the webapp front end into the docker compose
+- Get the Env stuff working
+- make build faster -- use an image with pandas installed
