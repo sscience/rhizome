@@ -49,7 +49,7 @@ class Document(models.Model):
 
     def transform_upload(self):
 
-        from rhizome.models.datapoint_models import taPoint, DataPoint
+        from rhizome.models.datapoint_models import DocDataPoint, DataPoint
 
         self.build_csv_df()
         self.process_file()
@@ -372,8 +372,8 @@ class Document(models.Model):
 
     def add_unique_index(self, x):
 
-            x['unique_index'] = str(x['location_id']) + '_' + str(
-                x['indicator_id']) + '_' + str(to_datetime(x['data_date'], utc=True))
+        x['unique_index'] = str(x['location_id']) + '_' + str(
+            x['indicator_id']) + '_' + str(to_datetime(x['data_date'], utc=True))
 
         return x
 

@@ -23,14 +23,7 @@ def populate_geo_data(apps, schema_editor):
     sheet otherwise we will have foreign key constraint issues.
     '''
 
-    # process_geo_json()
-    get_informal_settlement_indicators()
-
-
-def get_informal_settlement_indicators():
-    # https://data.humdata.org/dataset/syrian-refugeees-informal-settlements-in-lebanon
-    pd.read_csv('migration_data/informal_settlements.csv')
-
+    process_geo_json()
 
 
 def process_geo_json():
@@ -54,7 +47,15 @@ def create_country_meta_data(c):
         url = 'http://code.highcharts.com/mapdata/countries/{0}/{0}-all.geo.json'.format(c)
         response = urllib2.urlopen(url)
 
+        print '--00--'
+        print response
+        print '--00--'
+
         data = json.loads(response.read())
+
+        print data
+        print '--00--'
+
         with open(json_file_name, 'w+') as outfile:
             json.dump(data, outfile)
 
@@ -146,5 +147,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_initial_data),
+        migrations.RunPython(populate_geo_data),
     ]

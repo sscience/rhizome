@@ -32,7 +32,6 @@ environment_seed.env
 .idea/
 *.esproj/
 .htaccess
-/geo
 *~
 **/#*#
 webapp/src/assets/js
