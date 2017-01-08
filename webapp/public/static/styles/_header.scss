@@ -1,0 +1,111 @@
+header {
+  background-color: $rhz-navigation-bg-color;
+  color: $rhz-navigation-color;
+  text-transform: uppercase;
+  z-index: 10000;
+  .logo {
+    position: relative;
+    top: .5rem;
+    margin-left: 2rem;
+  }
+  @include respond-to(medium-screens) {
+    nav {
+      text-align: center !important;
+      padding: 0 !important;
+    }
+    ul.dashboards-nav > li > a {
+      padding: 27px 10px;
+      @media #{$small-only} {
+        height: 3.7rem;
+        padding: 1rem;
+      }
+    }
+  }
+
+  nav {
+    padding: 0 !important;
+  }
+
+  a {
+    color: $rhz-font-color;
+    font-size: 1.25rem;
+    &:hover {
+      color: $rhz-font-color ;
+    }
+  }
+
+  .navigation-bar {
+    font-family: proxima, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    height: $header-height;
+  }
+
+  .channels {
+    @include clearfix();
+    li {
+      margin: 0;
+      display: inline-block;
+      text-align: center;
+
+      &:hover {
+        &:first-child {
+          background-color: $rhz-navigation-hover-sop-color;
+        }
+
+        &:nth-child(2) {
+          background-color: $rhz-navigation-hover-c4d-color;
+        }
+
+        &:last-child {
+          background-color: $rhz-navigation-hover-data-color;
+        }
+      }
+
+      &.active {
+        background-color: $rhz-background-color;
+        i {
+          transform: rotate(45deg);
+        }
+      }
+
+      > a {
+        display: block;
+        height: $header-height;
+        opacity: 1;
+        line-height: $header-height;
+      }
+
+      .fa {
+        margin-right: 5px;
+      }
+    }
+  }
+
+  .logo {
+    text-align: center;
+    height: 100%;
+  }
+
+  .dashboard-control {
+    background: black;
+    text-align: right;
+    position: relative;
+    @media #{$small-only} {
+      top: .5rem;
+      width: 100%;
+    }
+  }
+}
+
+.image-style {
+  width: auto;
+  height: 5rem;
+}
+
+h2.subheader {
+  font-family: adelle;
+  font-size: 1.3rem;
+  margin: 1.2rem 0 0 1rem;
+  display: block;
+  font-weight: 700;
+}

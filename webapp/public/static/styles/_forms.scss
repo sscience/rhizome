@@ -1,0 +1,103 @@
+form {
+  &.inline {
+    button,
+    .button {
+      @include button-size($button-tny, true);
+      margin-bottom: rem-calc(5);
+    }
+  }
+
+  .dropdown {
+    .menu-button {
+      margin-bottom: rem-calc(5);
+      padding-left: rem-calc(12);
+      padding-right: 2rem;
+      text-align: left;
+      border-bottom-width: 3px;
+      border-bottom-color: #667c89;
+    }
+
+    .selection-controls {
+      button,
+      .button {
+      	@include button-size($button-tny);
+      	width: auto;
+        margin-bottom: rem-calc(5);
+      }
+    }
+  }
+
+  .clear-btn {
+  	color: $base;
+  }
+
+}
+
+.radio-group {
+  input:not(:first-of-type) {
+    margin-left: 1rem;
+  }
+}
+
+input[type='radio'] {
+  margin-right: .25rem;
+}
+
+input[type="text"],
+input[type="password"],
+.text-field {
+  background-color: rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+  color: black;
+  &:focus {
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.2);
+    color: black;
+		box-shadow: none;
+		outline: none;
+	}
+}
+
+.text-right{
+  text-align: right;
+}
+
+input.title-input {
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0;
+  margin-top: 1.5rem;
+  border: none;
+  top: -.05rem;
+  color: $rhz-body-color;
+  font-family: adelle;
+  font-size: 1.4rem;
+  width: 20rem;
+  display: inline-block;
+  @media #{$small-only} {
+    margin: 0 auto;
+    width: 18rem;
+  }
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+  &:focus {
+    background-color: rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+    color: $rhz-body-color;
+  }
+}
+
+.resource-form {
+  button.expand {
+    margin: 1rem 0;
+  }
+  input[type=text], textarea {
+    font-size: 1rem;
+    background: rgba(0, 0, 0, 0.1);
+    &:focus {
+      background-color: rgba(0, 0, 0, 0.05);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+      color: $rhz-body-color;
+    }
+  }
+}

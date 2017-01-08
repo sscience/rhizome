@@ -1,0 +1,40 @@
+.user-account-container {
+	width: 700px;
+	margin: 30px auto;
+	.row {
+		.left-box {
+		  text-align: right;
+		  .label-box {
+		    background-color: #eee;
+		    border-color: #ddd;
+		    padding: 5px;
+		    text-align: left;
+		  }
+
+		}
+		.right-box {
+		    .location-table {
+		      margin-top: 0px;
+		      border: none;
+		      thead {
+		        background-color: #fff;
+		      }
+		      tbody tr td {
+		        input[type="checkbox"] {
+		        	margin-bottom: 0px;
+		        }
+		        span.fa {
+		        	cursor: pointer;
+		        }
+		      }
+		    }
+			.user-roles {
+			  list-style: none;
+			  margin-left: 0px;
+			  li .roll-title {
+			    padding-left: 5px;
+			  }
+			}
+		}
+	}
+}
