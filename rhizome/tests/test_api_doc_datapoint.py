@@ -31,8 +31,7 @@ class DocDataPointResourceTest(RhizomeApiTestCase):
                                              location_id=self.top_lvl_location.id,
                                              campaign_id=campaign.id,
                                              value=value,
-                                             source_submission_id=2,
-                                             agg_on_location=False)
+                                             source_submission_id=2)
         data = {'document_id': doc.id}
         url = '/api/v1/doc_datapoint/'
         resp = self.ts.get(self, url, data=data)
@@ -53,8 +52,7 @@ class DocDataPointResourceTest(RhizomeApiTestCase):
                                              location_id=self.top_lvl_location.id,
                                              campaign_id=campaign.id,
                                              value=value,
-                                             source_submission_id=2,
-                                             agg_on_location=False)
+                                             source_submission_id=2)
         url = '/api/v1/doc_datapoint/'
         resp = self.ts.get(self, url)
         self.deserialize(resp)
@@ -77,8 +75,7 @@ class DocDataPointResourceTest(RhizomeApiTestCase):
                                              location_id=self.top_lvl_location.id,
                                              campaign_id=campaign.id,
                                              value=value,
-                                             source_submission_id=2,
-                                             agg_on_location=False)
+                                             source_submission_id=2)
         data = {'document_id': 1234}
         url = '/api/v1/doc_datapoint/'
         resp = self.ts.get(self, url, data=data)

@@ -21,8 +21,6 @@ from jsonfield import JSONField
 
 from rhizome.models.location_models import Location
 from rhizome.models.indicator_models import Indicator
-from rhizome.models.campaign_models import Campaign
-
 
 class Document(models.Model):
     '''
@@ -51,7 +49,7 @@ class Document(models.Model):
 
     def transform_upload(self):
 
-        from rhizome.models.datapoint_models import DocDataPoint, DataPoint
+        from rhizome.models.datapoint_models import taPoint, DataPoint
 
         self.build_csv_df()
         self.process_file()
@@ -59,8 +57,8 @@ class Document(models.Model):
 
     def build_csv_df(self):
 
-        self.location_column, self.campaign_column, self.uq_id_column = \
-            ['geocode', 'campaign', 'unique_key']
+        self.location_column, self.uq_id_column = \
+            ['geocode', 'unique_key']
 
         self.date_column = 'data_date'
 
@@ -72,7 +70,7 @@ class Document(models.Model):
 
             try:
                 csv_df[self.uq_id_column] = csv_df[self.location_column].map(
-                    str) + csv_df[self.campaign_column]
+                    str)
             except Exception as err: ## FIXME # clean this
                 if self.date_column not in csv_df.columns:
                     error_message = '%s is a required column.' % err.message
@@ -83,8 +81,7 @@ class Document(models.Model):
 
         self.meta_lookup = {
             'location': {},
-            'indicator': {},
-            'campaign': {}
+            'indicator': {}
         }
         self.indicator_ids_to_exclude = set([-1])
         self.existing_submission_keys = SourceSubmission.objects.filter(
@@ -143,14 +140,9 @@ class Document(models.Model):
         for row in source_dp_json:
             row_dict = json.loads(row[0])
             rg_codes.append(row_dict[self.location_column])
-            if self.campaign_column and self.campaign_column in row_dict:
-                cp_codes.append(row_dict[self.campaign_column])
 
         for r in list(set(rg_codes)):
             all_codes.append(('location', r))
-
-        for c in list(set(cp_codes)):
-            all_codes.append(('campaign', c))
 
         doc_som_df = DataFrame(all_codes, columns=[
                                'content_type', 'source_object_code'])
@@ -217,9 +209,6 @@ class Document(models.Model):
         if self.file_type == 'date':
             submission_dict['data_date'] =\
                 parse(submission_data[self.date_column])
-        else:
-            submission_dict['campaign_code'] =\
-                submission_data[self.campaign_column]
 
         return submission_dict, instance_guid
 
@@ -327,16 +316,11 @@ class Document(models.Model):
             source_submission_id__document_id=self.id,
         ).exclude(location_id__in=som_lookup['location']).delete()
 
-        ## delete bad_campaign_data ##
-        DataPoint.objects.filter(
-            source_submission_id__document_id=self.id,
-        ).exclude(location_id__in=som_lookup['campaign']).delete()
-
     def refresh_submission_details(self):
         '''
         Based on new and existing mappings, upsert the cooresponding master_object_id_ids
         and determine which rows are ready to process.. since we need a master_location
-        and a master_campaign in order to have a successful submission this method helps
+        in order to have a successful submission this method helps
         us filter the data that we need to process.
         Would like to be more careful here about what i delete as most things wont be
         touched when it comes to this re-processing, and thus the delete and re-insert
@@ -355,12 +339,10 @@ class Document(models.Model):
             all_ss_ids.append(submission.id)
 
             location_id = submission.get_location_id()
-            campaign_id = submission.get_campaign_id()
 
             if location_id > 0:
                 ss_id_list_to_process.append(submission.id)
                 submission.location_id = location_id
-                submission.campaign_id = campaign_id
 
         if len(submission_qs) > 0:
             bulk_update(submission_qs)
@@ -379,23 +361,20 @@ class Document(models.Model):
         for row in SourceSubmission.objects.filter(document_id=self.id):
 
             row.location_id = row.get_location_id()
-            row.campaign_id = row.get_campaign_id()
 
-            # if no mapping for campaign / location -- dont process
-            if (not row.campaign_id or row.campaign_id == -1) and not row.data_date:
-                row.process_status = 'missing campaign or data_date'
+            # if no mapping location -- dont process
+            if not row.data_date:
+                row.process_status = 'data_date'
             elif not row.location_id or row.location_id == -1:
                 row.process_status = 'missing location'
             else:
                 doc_dps = self.process_source_submission(row)
 
     def add_unique_index(self, x):
-        if x['campaign_id'] and not math.isnan(x['campaign_id']):
-            x['unique_index'] = str(
-                x['location_id']) + '_' + str(x['indicator_id']) + '_' + str(int(x['campaign_id']))
-        else:
+
             x['unique_index'] = str(x['location_id']) + '_' + str(
                 x['indicator_id']) + '_' + str(to_datetime(x['data_date'], utc=True))
+
         return x
 
     def filter_data_frame_conflicts(self, df):
@@ -403,7 +382,7 @@ class Document(models.Model):
         These are CONFLICTS and should be returned to the user.  For now,
         we simply take the datapoint with the max soruce_submission_id
         when there are two datapoints in one document for which exist the same
-        location, indicator, campaign combo.
+        location, indicator.
         '''
 
         filtered_df = df.sort(['source_submission_id'], ascending=False)\
@@ -415,7 +394,7 @@ class Document(models.Model):
 
         ## FIXME should import this once when we run `refresh_master`
         ## but if i don't do it for each method there i get a NameError
- 
+
         from rhizome.models.datapoint_models import DataPoint, DocDataPoint
 
         dp_batch = []
@@ -442,7 +421,6 @@ class Document(models.Model):
             dp_batch.append(DataPoint(**{
                 'indicator_id': row.indicator_id,
                 'location_id': row.location_id,
-                'campaign_id': row.campaign_id,
                 'data_date': row.data_date,
                 'value': row.value,
                 'unique_index': row.unique_index,
@@ -468,12 +446,10 @@ class Document(models.Model):
 
     # helper function to sync_datapoints
     def add_unique_index(self, x):
-        if x['campaign_id'] and not math.isnan(x['campaign_id']):
-            x['unique_index'] = str(
-                x['location_id']) + '_' + str(x['indicator_id']) + '_' + str(x['campaign_id'])
-        else:
-            x['unique_index'] = str(x['location_id']) + '_' + str(
-                x['indicator_id']) + '_' + str(to_datetime(x['data_date'], utc=True))
+
+        x['unique_index'] = str(x['location_id']) + '_' + str(
+            x['indicator_id']) + '_' + str(to_datetime(x['data_date'], utc=True))
+
         return x
 
     def source_submission_cell_to_doc_datapoint(self, row, indicator_string,
@@ -505,11 +481,9 @@ class Document(models.Model):
                 'indicator_id':  indicator_id,
                 'value': cleaned_val,
                 'location_id': row.location_id,
-                'campaign_id': row.campaign_id,
                 'data_date': data_date,
                 'document_id': self.id,
                 'source_submission_id': row.id,
-                'agg_on_location': True,
             })
             return doc_dp
         else:
@@ -520,40 +494,12 @@ class Document(models.Model):
         This needs alot of work but basically determines if a particular submission
         cell is alllowed.
         '''
-        str_lookup = {'yes': 1, 'no': 0}
-        if val is None:
-            return None
 
-        # deal with percentages
-        convert_percent = False
-        if type(val) == unicode and '%' in val:
-            try:
-                val = float(re.sub('%', '', val))
-                convert_percent = True
-            except ValueError:
-                pass
-        ## clean!  i am on a deadline rn :-/  ##
-
-        try:
-            cleaned_val = locale.atoi(val)  # 100,000 -> 100000.oo
-        except AttributeError:
-            cleaned_val = float(val)
-        except ValueError:
-            try:
-                cleaned_val = float(val)
-            except ValueError:
-                try:
-                    cleaned_val = str_lookup[val.lower()]
-                except KeyError:
-                    raise ValueError('Bad Value!')
-
-        if convert_percent:
-            cleaned_val = cleaned_val / 100.0
-        return cleaned_val
+        return float(val)
 
 class SourceObjectMap(models.Model):
     # FIXME -> need to check what would be foreign keys
-    # so region_maps / campaign_maps are valid
+    # so region_maps are valid
 
     master_object_id = models.IntegerField()  # need to think about to FK this.
     master_object_name = models.CharField(max_length=255, null=True)
@@ -579,10 +525,6 @@ class SourceObjectMap(models.Model):
 
         if self.content_type == 'location':
             self.master_object_name = Location.objects\
-                .get(id=self.master_object_id).name
-
-        if self.content_type == 'campaign':
-            self.master_object_name = Campaign.objects\
                 .get(id=self.master_object_id).name
 
         return super(SourceObjectMap, self).save(**kwargs)
@@ -625,7 +567,8 @@ class SourceSubmission(models.Model):
     row_number = models.IntegerField()
     data_date = models.DateTimeField(null=True)
     location_code = models.CharField(max_length=1000)
-    campaign_code = models.CharField(max_length=1000)
+    latitude = models.FloatField()
+    longitude = models.FloatField()
     location_display = models.CharField(max_length=1000)
     submission_json = JSONField()
     created_at = models.DateTimeField(auto_now=True)
@@ -644,16 +587,6 @@ class SourceSubmission(models.Model):
             l_id = None
 
         return l_id
-
-    def get_campaign_id(self):
-
-        try:
-            c_id = SourceObjectMap.objects.get(content_type='campaign',
-                                               source_object_code=self.campaign_code).master_object_id
-        except SourceObjectMap.DoesNotExist:
-            c_id = None
-
-        return c_id
 
 # Exceptions #
 class BadFileHeaderException(Exception):
