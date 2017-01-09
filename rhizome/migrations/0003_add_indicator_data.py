@@ -12,7 +12,7 @@ import pandas as pd
 from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 
 from rhizome.models.document_models import Document, SourceObjectMap, \
-    DocumentSourceObjectMap, DocumentDetail, DocDetailType
+    DocumentSourceObjectMap, DocumentDetail, DocDetailType, SourceSubmission
 from rhizome.models.indicator_models import IndicatorTag, Indicator
 from rhizome.models.location_models import Location, LocationTree, LocationType
 from rhizome.models.datapoint_models import DataPoint
@@ -28,31 +28,18 @@ def populate_source_data(apps, schema_editor):
     source_sheet_df = pd.read_csv('migration_data/informal_settlements.csv', \
         encoding = 'iso8859_6') # Arabic
 
-
     source_sheet_df.drop(source_sheet_df.index[:1], inplace=True)
 
     mdf = MetaDataGenerator(source_sheet_df)
     mdf.main()
 
-    ## populate the location tree @
-    ltc = LocationTreeCache()
-    ltc.main()
-
-    if len(LocationTree.objects.all().values_list('id', flat=True)) == 0:
-        raise Exception('Location Tree Empty')
-
-    if len(DataPoint.objects.all().values_list('id', flat=True)) == 0:
-        raise Exception('No Datapoints')
-
-
 class MetaDataGenerator:
 
     def __init__(self, source_sheet_df):
 
-        self.country = 'Lebanon'
-        # self.campaign_type = CampaignType.objects.get(name='IDP Survey')
+        self.country = 'Lebanon' # FIXME get from settings
         self.source_sheet_df = source_sheet_df
-        self.source_sheet_df['COUNTRY'] = self.country # FIXME get from settings
+        self.source_sheet_df['COUNTRY'] = self.country
 
         self.country_location_type, created = \
             LocationType.objects.get_or_create(name='Country', defaults={'admin_level':0})
@@ -82,46 +69,46 @@ class MetaDataGenerator:
         ## add location_ids here when inserting and use to find the parent ##
         self.existing_location_map = {self.country : self.top_lvl_location.id}
 
-        # Aakkar
-        # An Nabaţīya
-        # Baalbek-Hermel
-        # Beirut
-        # Beqaa	LB.BQ
-        # Mount Lebanon
-        # North Lebanon'
-        # South Lebanon
-
-        ## the names in the shape file are different from ODK ##
+        ## the names in the highchart shape file are different from ODK ##
         # { ODK_NAME: HIGH_CHART_NAME }
         self.location_lookup = {
+                'Bekaa':'Beqaa',
+                'North':'North Lebanon',
+                'Mount Lebanon':'Mount Lebanon',
+                'Nabatiye':'An Nabatiyah',
+                'South':'South Lebanon',
             }
 
         self.indicator_lookup = {
-            'RRM_Distribution/group_distribution/rrm_kits': 'RRM Kits Distributed',
-            'RRM_Distribution/group_distribution/plumpy' : 'Plumpy Bars Distributed',
-            'RRM_Distribution/group_distribution/families': 'Families Seen',
-            'RRM_Distribution/group_distribution/singles': 'Singles Seen'
+            'Status':'Status',
+            'Number of tents':'Number of Tents',
+            'Number of Individuals':'Number of Individuals',
+            'Number of Latrines':'Number of Latrines',
+            'Number of 1000 Litre Tanks':'Number of 1000 Litre Tanks',
+            'Type of Water Source':'Type of Water Source',
+            'Waste Disposal':'Waste Disposal',
+            'Type of Contract':'Type of Contract'
         }
+
 
     def main(self):
 
         self.document =  Document.objects.create(doc_title = 'lbn_initial',
                             guid = 'lbn_initial')
 
-        self.build_meta_data_from_source() ## creates the geo heirarchy
-        self.process_source_sheet() ## creates the datapoints
+        ## creates the indicator meta
+        self.build_indicator_meta()
+        ## creates the geo heirarchy from the source sheet
+        self.build_location_meta()
 
-    def build_meta_data_from_source(self):
-
-        indicator_ids = self.build_indicator_meta()
-        location_ids = self.build_location_meta()
+        ## creates the datapoints
+        self.process_source_sheet()
 
     def build_indicator_meta(self):
 
         batch = []
 
         df_columns = self.source_sheet_df.columns
-        config_columns = self.odk_file_map.values()
         indicators = df_columns #set(df_columns).intersection(set(config_columns))
 
         for ind in indicators:
@@ -146,6 +133,9 @@ class MetaDataGenerator:
 
             except KeyError:
                 pass
+
+        if len(Indicator.objects.all().values_list('id', flat=True)) == 0:
+            raise Exception('No Indicators!!!')
 
     def build_location_meta(self):
 
@@ -219,6 +209,13 @@ class MetaDataGenerator:
                 l.save()
             except Location.DoesNotExist:  ## LOOK INTO THIS....
                 pass
+
+        ## populate the location tree @
+        ltc = LocationTreeCache()
+        ltc.main()
+
+        if len(LocationTree.objects.all()) == 0:
+            raise Exception('Empty Location Tree')
 
     def process_location_df(self, location_df, admin_level):
 
@@ -303,7 +300,7 @@ class MetaDataGenerator:
         self.document.location_column = self.odk_file_map['settlement_column']
         self.document.date_column = self.odk_file_map['date_column']
         self.document.lat_column = self.odk_file_map['lat_column']
-        self.document.lon_column = self.odk_file_map['lat_column']
+        self.document.lon_column = self.odk_file_map['lon_column']
         self.document.uq_id_column = 'PCode'
         self.document.existing_submission_keys = []
         self.document.file_header = list(self.source_sheet_df.columns)
@@ -311,8 +308,14 @@ class MetaDataGenerator:
         self.document.process_file()
         self.document.upsert_source_object_map()
 
+        if len(SourceSubmission.objects.all()) == 0:
+            raise Exception('Did not ingest datapoints')
+
         ## source_submissions -> datapoint ##
         self.document.refresh_master()
+
+        if len(DataPoint.objects.all()) == 0:
+            raise Exception('Did not ingest datapoints')
 
 
 def create_doc_details(doc_id):

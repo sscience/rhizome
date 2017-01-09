@@ -198,6 +198,7 @@ class Document(models.Model):
         submission_dict = {
             'submission_json': submission_data,
             'document_id': self.id,
+            'data_date': '2016-01-01',# parse(submission_data[self.date_column]),
             'row_number': submission_ix,
             'latitude': submission_data[self.lat_column],
             'longitude': submission_data[self.lon_column],
@@ -205,10 +206,6 @@ class Document(models.Model):
             'instance_guid': submission_data[self.uq_id_column],
             'process_status': 'TO_PROCESS',
         }
-
-        if self.file_type == 'date':
-            submission_dict['data_date'] =\
-                parse(submission_data[self.date_column])
 
         return submission_dict, instance_guid
 
@@ -364,7 +361,7 @@ class Document(models.Model):
 
             # if no mapping location -- dont process
             if not row.data_date:
-                row.process_status = 'data_date'
+                row.process_status = 'missing data_date'
             elif not row.location_id or row.location_id == -1:
                 row.process_status = 'missing location'
             else:
@@ -583,7 +580,7 @@ class SourceSubmission(models.Model):
         try:
             l_id = SourceObjectMap.objects.get(content_type='location',
                    source_object_code=self.location_code).master_object_id
-        except SourceObjectMap.DoesNotExist :
+        except SourceObjectMap.DoesNotExist:
             l_id = None
 
         return l_id

@@ -47,14 +47,7 @@ def create_country_meta_data(c):
         url = 'http://code.highcharts.com/mapdata/countries/{0}/{0}-all.geo.json'.format(c)
         response = urllib2.urlopen(url)
 
-        print '--00--'
-        print response
-        print '--00--'
-
         data = json.loads(response.read())
-
-        print data
-        print '--00--'
 
         with open(json_file_name, 'w+') as outfile:
             json.dump(data, outfile)
@@ -78,7 +71,7 @@ def create_country_meta_data(c):
 
     # create the top level country #
     country_loc_object = Location.objects.create(
-        name = c,
+        name = 'Lebanon',
         location_code = c,
         location_type_id = country_lt.id
     )
@@ -92,9 +85,6 @@ def process_geo_row(ix, row, country_loc_object, province_lt):
     # create the proivince location #
     row_properties, row_geo = row.properties, row.geometry
 
-    print '---==---'
-    print row_properties
-
     try:
         province_dict = {
             'name': row_properties['name'],
@@ -103,16 +93,12 @@ def process_geo_row(ix, row, country_loc_object, province_lt):
             'location_type_id':province_lt.id
         }
     except KeyError as err: # not a location since it does not have name field
-
-        print '==\n' * 5
         print err
-        print '==\n' * 5
 
     try:
         with transaction.atomic():
             province_loc_object = Location.objects.create(**province_dict)
     except IntegrityError as err:
-        print '= ERRRROROROROR'
         print err
 
         alt_name = row_properties['woe-name']
