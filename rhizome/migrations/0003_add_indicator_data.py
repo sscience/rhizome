@@ -12,7 +12,7 @@ import pandas as pd
 from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 
 from rhizome.models.document_models import Document, SourceObjectMap, \
-    DocumentSourceObjectMap
+    DocumentSourceObjectMap, DocumentDetail, DocDetailType
 from rhizome.models.indicator_models import IndicatorTag, Indicator
 from rhizome.models.location_models import Location, LocationTree, LocationType
 from rhizome.models.datapoint_models import DataPoint
@@ -25,24 +25,25 @@ def populate_source_data(apps, schema_editor):
     sheet otherwise we will have foreign key constraint issues.
     '''
 
-    source_sheet_df = pd.read_csv('migration_data/informal_settlements.csv', encoding = 'iso8859_6')
+    source_sheet_df = pd.read_csv('migration_data/informal_settlements.csv', \
+        encoding = 'iso8859_6') # Arabic
 
-    print '==-source_sheet_df-=='
-    print source_sheet_df[:10]
+
+    source_sheet_df.drop(source_sheet_df.index[:1], inplace=True)
 
     mdf = MetaDataGenerator(source_sheet_df)
     mdf.main()
 
-    datapoint_id_list = DataPoint.objects.all().values_list('id', flat=True)
-
-    location = Location.objects.get(name = 'Lebanon')
-    tag = IndicatorTag.objects.create(tag_name = 'RRM Activity')
-
+    ## populate the location tree @
     ltc = LocationTreeCache()
     ltc.main()
 
     if len(LocationTree.objects.all().values_list('id', flat=True)) == 0:
         raise Exception('Location Tree Empty')
+
+    if len(DataPoint.objects.all().values_list('id', flat=True)) == 0:
+        raise Exception('No Datapoints')
+
 
 class MetaDataGenerator:
 
@@ -50,9 +51,8 @@ class MetaDataGenerator:
 
         self.country = 'Lebanon'
         # self.campaign_type = CampaignType.objects.get(name='IDP Survey')
-        self.tag, created = IndicatorTag.objects.get_or_create(tag_name='IDP Survey')
         self.source_sheet_df = source_sheet_df
-        self.source_sheet_df['COUNTRY'] = self.country # get from settings
+        self.source_sheet_df['COUNTRY'] = self.country # FIXME get from settings
 
         self.country_location_type, created = \
             LocationType.objects.get_or_create(name='Country', defaults={'admin_level':0})
@@ -79,10 +79,8 @@ class MetaDataGenerator:
             'Settlement' : 'Cadastral'
         }
 
-
         ## add location_ids here when inserting and use to find the parent ##
         self.existing_location_map = {self.country : self.top_lvl_location.id}
-
 
         # Aakkar
         # An Nabaţīya
@@ -110,13 +108,8 @@ class MetaDataGenerator:
         self.document =  Document.objects.create(doc_title = 'lbn_initial',
                             guid = 'lbn_initial')
 
-        self.build_meta_data_from_source()
-
-        # self.process_source_sheet()
-
-        # indicators = Indicator.objects.all()
-        # if len(indicators) < 10:
-        #     raise Exception()
+        self.build_meta_data_from_source() ## creates the geo heirarchy
+        self.process_source_sheet() ## creates the datapoints
 
     def build_meta_data_from_source(self):
 
@@ -153,19 +146,6 @@ class MetaDataGenerator:
 
             except KeyError:
                 pass
-
-    def build_campaign_meta(self):
-
-        date_column = self.odk_file_map['date_column']
-
-        all_date_df = pd.DataFrame(self.source_sheet_df[date_column], columns = [date_column])
-
-        all_date_df['month_and_year'] = all_date_df[date_column]\
-            .apply(lambda x: unicode(x.year) + '-' + unicode(x.month))
-
-        gb_df = pd.DataFrame(all_date_df\
-            .groupby(['month_and_year'])[date_column].min())
-        gb_df.reset_index(level=0, inplace=True)
 
     def build_location_meta(self):
 
@@ -211,7 +191,7 @@ class MetaDataGenerator:
         district_df.drop_duplicates(inplace=True)
         self.process_location_df(district_df, 'District')
 
-        ## CITY ##
+        ## SETTlEMENT ##
         settlement_column = self.odk_file_map['settlement_column']
         settlement_df = pd.DataFrame(\
             self.source_sheet_df[[settlement_column,district_column]])
@@ -242,12 +222,6 @@ class MetaDataGenerator:
 
     def process_location_df(self, location_df, admin_level):
 
-        print '=ADMIN LEVEL : {0}'.format(admin_level)
-
-        location_df[:5]
-
-        print 'THAT WAS LOCAITON TREE DF===\n' * 5
-
         location_type_id = LocationType.objects.get(name = admin_level).id
         location_name_column = self.odk_file_map[admin_level.lower() + '_column']
 
@@ -273,10 +247,6 @@ class MetaDataGenerator:
                     unicode(admin_level)
             except KeyError:
                 location_code = loc[location_name_column]
-
-            print '==--==\n' * 5
-            print location_code
-            print '==--==\n' * 5
 
             # batch.append(\
             Location.objects.create(**{
@@ -329,17 +299,20 @@ class MetaDataGenerator:
         create_doc_details(self.document.id)
 
         ## document -> source_submissions ##
-        self.document.transform()
+        # FiXME -- replace with "transform_upload"
+        self.document.location_column = self.odk_file_map['settlement_column']
+        self.document.date_column = self.odk_file_map['date_column']
+        self.document.lat_column = self.odk_file_map['lat_column']
+        self.document.lon_column = self.odk_file_map['lat_column']
+        self.document.uq_id_column = 'PCode'
+        self.document.existing_submission_keys = []
+        self.document.file_header = list(self.source_sheet_df.columns)
+        self.document.csv_df = self.source_sheet_df
+        self.document.process_file()
+        self.document.upsert_source_object_map()
 
         ## source_submissions -> datapoint ##
         self.document.refresh_master()
-
-        # dt = DateDocTransform(self.user_id, self.document.id, self.source_sheet_df)
-        # dt.process_file()
-        #
-        # ## source_submissions -> datapoints ##
-        # mr = MasterRefresh(self.user_id, self.document.id)
-        # mr.main()
 
 
 def create_doc_details(doc_id):
@@ -348,13 +321,15 @@ def create_doc_details(doc_id):
         'lat_column', 'lon_column']
 
     for dd_type in doc_detail_types:
+
+        ddt = DocDetailType.objects.create(name = dd_type)
+
         DocumentDetail.objects.create(
             document_id = doc_id,
-            doc_detail_type_id = DocDetailType.objects.get(name = dd_type).id,
+            doc_detail_type_id = ddt.id,
             doc_detail_value = dd_type ## this implies that the source columns
                                         ## are named with the above convention
         )
-
 
 class Migration(migrations.Migration):
 

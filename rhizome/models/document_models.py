@@ -57,10 +57,8 @@ class Document(models.Model):
 
     def build_csv_df(self):
 
-        self.location_column, self.uq_id_column = \
-            ['geocode', 'unique_key']
-
-        self.date_column = 'data_date'
+        self.location_column, self.uq_id_column, self.date_column = \
+            ['geocode', 'unique_key', 'data_date']
 
         raw_csv_df = read_csv(settings.MEDIA_ROOT + str(self.docfile))
 
@@ -201,6 +199,8 @@ class Document(models.Model):
             'submission_json': submission_data,
             'document_id': self.id,
             'row_number': submission_ix,
+            'latitude': submission_data[self.lat_column],
+            'longitude': submission_data[self.lon_column],
             'location_code': submission_data[self.location_column],
             'instance_guid': submission_data[self.uq_id_column],
             'process_status': 'TO_PROCESS',
