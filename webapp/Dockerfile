@@ -8,4 +8,8 @@ ADD . /code
 
 RUN npm install gulp-cli -g
 
+WORKDIR frontend
+
 RUN npm install
+
+RUN npm rebuild node-sass
