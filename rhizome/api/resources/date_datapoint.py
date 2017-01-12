@@ -138,7 +138,7 @@ class DateDatapointResource(BaseModelResource):
         self.end_date = request.GET.get('end_date', None) or \
             request.GET.get('campaign_end', None)
         self.location_id = request.GET.get('location_id', None)
-        self.location_depth = request.GET.get('location_depth', 0)
+        self.location_depth = 0 # FIXME on front end. request.GET.get('location_depth', 0)
 
         self.location_ids = None
         location_ids = request.GET.get('location_id__in', None)
@@ -226,10 +226,8 @@ class DateDatapointResource(BaseModelResource):
                     on each district
         '''
 
-        # FIXME - remove this guid and figure out better logic for this
-        chart_uuid = request.GET.get('chart_uuid', None)
-        if chart_uuid and chart_uuid == '5599c516-d2be-4ed0-ab2c-d9e7e5fe33be':
-            return custom_logic.handle_polio_case_table(self)
+        print request
+
 
         if self.location_ids:
             return self.handle_discrete_location_request()
@@ -251,6 +249,10 @@ class DateDatapointResource(BaseModelResource):
             loc_tree_df = DataFrame(list(LocationTree.objects.filter(
                 parent_location_id = self.location_ids,
             ).values_list(*loc_tree_df_columns)),columns = loc_tree_df_columns)
+
+            print '==--=='
+            print loc_tree_df
+            print '==--=='
 
             dp_loc_ids = [self.location_id]
             if self.location_depth > 0:

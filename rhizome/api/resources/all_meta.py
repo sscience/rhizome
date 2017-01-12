@@ -2,7 +2,6 @@ from tastypie import fields
 from django.contrib.auth.models import User
 
 from rhizome.api.resources.base_non_model import BaseNonModelResource
-from rhizome.models.campaign_models import Campaign
 from rhizome.models.indicator_models import Indicator, IndicatorTag, \
     IndicatorToTag
 from rhizome.models.location_models import Location
@@ -10,7 +9,6 @@ from rhizome.models.location_models import Location
 from rhizome.models.dashboard_models import CustomChart, CustomDashboard
 
 class AllMetaResult(object):
-    campaigns = list()
     charts = list()
     dashboards = list()
     indicators = list()
@@ -43,8 +41,7 @@ class AllMetaResource(BaseNonModelResource):
     def get_object_list(self, request):
         qs = []
         am_result = AllMetaResult()
-        am_result.campaigns = \
-            list(Campaign.objects.all().values())
+        am_result.campaigns = []
         am_result.charts = \
             list(CustomChart.objects.all().values())
         am_result.dashboards = \

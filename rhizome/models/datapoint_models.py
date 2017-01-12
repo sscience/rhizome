@@ -2,7 +2,6 @@ from django.db import models
 
 from rhizome.models.location_models import Location
 from rhizome.models.indicator_models import Indicator
-from rhizome.models.campaign_models import Campaign
 from rhizome.models.document_models import Document, SourceSubmission
 
 
@@ -37,7 +36,6 @@ class DataPoint(models.Model):
 
     indicator = models.ForeignKey(Indicator)
     location = models.ForeignKey(Location)
-    campaign = models.ForeignKey(Campaign, null=True)
     data_date = models.DateTimeField(null=True)
     value = models.FloatField(null=True)
     created_at = models.DateTimeField(auto_now=True)

@@ -144,8 +144,6 @@ def update_campaign(request):
     return render_to_response('manage_system.html',
         context_instance=RequestContext(request))
 
-
-
 class UserCreateView(PermissionRequiredMixin, generic.CreateView):
     model = User
     template_name = 'users/create.html'

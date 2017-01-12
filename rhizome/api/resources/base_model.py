@@ -18,7 +18,6 @@ from rhizome.api.custom_cache import CustomCache
 from rhizome.api.resources.base_resource import BaseResource
 from rhizome.api.exceptions import RhizomeApiException
 
-from rhizome.models.campaign_models import DataPointComputed
 from rhizome.models.location_models import Location, LocationTree, \
     LocationType
 
@@ -348,7 +347,13 @@ class BaseModelResource(ModelResource, BaseResource):
         self.location_id = request.GET.get('location_id', None)
         self.location_id_list = request.GET.get('location_id__in', None)
         self.location_type = request.GET.get('location_type', None)
-        self.location_depth = int(request.GET.get('location_depth', 0))
+        self.location_depth = request.GET.get('location_depth', 0)
+
+        ## fixme -- this is a hack due to the fact that we have different location types set up in BE / FE
+        if self.location_depth == '':
+            self.location_depth = 1
+
+        self.location_depth = int(self.location_depth)
 
         if self.location_id_list:
             location_ids = self.location_id_list.split(',')
@@ -400,48 +405,29 @@ class BaseModelResource(ModelResource, BaseResource):
             #     locations, or both `location_id and `location_depth` for a\
             #     recursive result')
 
-        try:
-            # this allows us to filter locations based on the result of a
-            # particular indicator / value.  So for instance.. think of the query
-            # `show me the population of all areas controlled by insurgents in
-            # location x.  We sould first get the locations based on the logic.
-            # above, say all of the districts in Iraq, but then this code below
-            # would further result that data to locations that meet a particular
-            # filter i.e. {filterer_indicator = "is controlled" : value = 1 }
-            # currently in our implementation with the Afghanistan EOC, this
-            # filter is cotolred via a drop down for "LPD Status", values are
-            # 1,2,3 based on their priority in the eradication initiative.
-            indicator_to_filter = request.GET['filter_indicator']
-            value_to_filter = request.GET['filter_value']
-
-            location_ids = self.get_locations_from_filter_param(location_ids,
-                                        indicator_to_filter, value_to_filter)
-
-        except KeyError:
-            pass
 
         return location_ids
 
-    def get_locations_from_filter_param(self, location_ids,
-                                        indicator_to_filter, value_to_filter):
-        '''
-        futher filter locations that have the indicator / value filter
-        in the computed datapoint table.
-
-        This is where for instance, we would take care of the filter that says
-        "we only want to see polio cases in `access challenged` areas."
-
-        so the query would come in as
-        {filter_indicator: <is_access_challenged>, filter_value<True>}
-
-        and return only locations that meet that condition.
-        '''
-
-        location_ids = DataPointComputed.objects.filter(
-            campaign__in=self.campaign_id_list,
-            location__in=location_ids,
-            indicator__short_name=indicator_to_filter,
-            value__in=value_to_filter.split(','))\
-            .values_list('location_id', flat=True)
-
-        return location_ids
+    # def get_locations_from_filter_param(self, location_ids,
+    #                                     indicator_to_filter, value_to_filter):
+    #     '''
+    #     futher filter locations that have the indicator / value filter
+    #     in the computed datapoint table.
+    #
+    #     This is where for instance, we would take care of the filter that says
+    #     "we only want to see polio cases in `access challenged` areas."
+    #
+    #     so the query would come in as
+    #     {filter_indicator: <is_access_challenged>, filter_value<True>}
+    #
+    #     and return only locations that meet that condition.
+    #     '''
+    #
+    #     location_ids = DataPointComputed.objects.filter(
+    #         campaign__in=self.campaign_id_list,
+    #         location__in=location_ids,
+    #         indicator__short_name=indicator_to_filter,
+    #         value__in=value_to_filter.split(','))\
+    #         .values_list('location_id', flat=True)
+    #
+    #     return location_ids

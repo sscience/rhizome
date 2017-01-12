@@ -35,11 +35,8 @@ v1_api.register(agg_refresh.AggRefreshResource())
 v1_api.register(cache_meta.CacheMetaResource())
 v1_api.register(
     calculated_indicator_component.CalculatedIndicatorComponentResource())
-v1_api.register(campaign.CampaignResource())
-v1_api.register(campaign_type.CampaignTypeResource())
 v1_api.register(custom_chart.CustomChartResource())
 v1_api.register(custom_dashboard.CustomDashboardResource())
-v1_api.register(campaign_datapoint.CampaignDataPointResource())
 v1_api.register(date_datapoint.DateDatapointResource())
 v1_api.register(doc_datapoint.DocDataPointResource())
 v1_api.register(doc_detail_type.DocDetailTypeResource())
@@ -63,8 +60,6 @@ v1_api.register(user_group.UserGroupResource())
 v1_api.register(user.UserResource())
 v1_api.register(all_meta.AllMetaResource())
 v1_api.register(date_doc_results.DateDocResultResource())
-v1_api.register(campaign_doc_results.CampaignDocResultResource())
-
 
 protected_patterns = [
 
