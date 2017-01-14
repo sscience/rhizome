@@ -5,7 +5,13 @@ Built with Python, Django, JavaScript, React, Reflux, HighCharts, and many other
 
 ## Setting up the development environment with Docker #
 
-Prerequisites
+Download  : ["Docker for Mac"](https://docs.docker.com/engine/installation/mac/)
+
+```
+$ docker-compose build && docker-compose up
+```
+
+Or, with Docker Machine:
 
 1. [VirtualBox](http://download.virtualbox.org/virtualbox/5.0.26/VirtualBox-5.0.26-108824-OSX.dmg)
 

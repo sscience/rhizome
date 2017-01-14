@@ -104,7 +104,7 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', 'rhizome'),
         'USER': os.getenv('DB_USER', 'djangoapp'),
         'PASSWORD': os.getenv('DB_PASSWORD', 'w3b@p01i0'),
-        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'HOST': os.getenv('DB_HOST', 'psqlserver'),
         'PORT': os.getenv('DB_PORT', 5432)
     }
 }

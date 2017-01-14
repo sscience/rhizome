@@ -1,7 +1,10 @@
 rhizome:
+  restart: always
   build: .
   links:
-    - db:postgres
+    - db:postgres ## should't this be `db:db` ?
+  expose:
+    - 9090
   ports:
     - 9090:9090
   volumes:
@@ -10,9 +13,13 @@ rhizome:
   entrypoint: /rhizome/bin/start.sh
 
 db:
+  restart: always
   image: postgres:9.3
+  expose:
+    - 5432
   ports:
     - 5432:5432
+  hostname: psqlserver
   env_file:
   - .env-example
   environment:
@@ -21,10 +28,10 @@ db:
     POSTGRES_PASSWORD: w3b@p01i0
     SECRET_KEY: 1234mxmxmxmxm
 
-fe:
-  build: webapp
-  volumes:
-    - ./webapp:/code
-  env_file:
-    - .env-example
-  entrypoint: /code/gulp_dev.sh
+# fe:
+#   build: webapp
+#   volumes:
+#     - ./webapp:/code
+#   env_file:
+#     - .env-example
+#   entrypoint: /code/gulp_dev.sh
