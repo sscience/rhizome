@@ -1,6 +1,7 @@
 FROM node:4.3.2
 
 RUN mkdir /watcher-app
+RUN mkdir /code
 
 RUN npm install gulp-cli -g
 
