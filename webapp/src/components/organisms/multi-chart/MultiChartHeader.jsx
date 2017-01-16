@@ -64,7 +64,7 @@ const MultiChartHeader = React.createClass({
       <TitleInput initialText={chart.title} save={this._toggleTitleEdit}/>
     ) : (
       <h2>
-        <a onClick={this._toggleTitleEdit} style={{cursor: 'text'}}>{chart.title || 'yyyyy'}</a>
+        <a onClick={this._toggleTitleEdit} style={{cursor: 'text'}}>{chart.title || 'Untitled Chart'}</a>
       </h2>
     )
 
