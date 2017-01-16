@@ -1,11 +1,15 @@
-FROM node:4.3.2 ## alpine..
+FROM node:4.3.2
 
-# https://github.com/b00giZm/docker-compose-nodejs-examples/blob/master/04-express-grunt-watch/Dockerfile
-
-WORKDIR /code
-
-ADD . /code
+RUN mkdir /watcher-app
 
 RUN npm install gulp-cli -g
 
+WORKDIR /watcher-app
+
+ADD package.json /watcher-app/package.json
+ADD external /watcher-app/external
+
 RUN npm install
+
+ADD gulpfile.babel.js /watcher-app/gulpfile.babel.js
+ADD . /watcher-app
