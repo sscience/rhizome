@@ -61,7 +61,7 @@ and visit: http://192.168.99.100:8000/ to use the app.
 To Enter Docker Web Server Container running Django
 
 ```
-$ docker exec -it rhizome_rhizome_1 bash
+$ docker exec -it rhizome_rhizome_1 sh
 ```
 
 While inside the docker web instance, migrate the database and create a superuser in order to login

@@ -17,10 +17,10 @@ gulp.config('tasks.build', {
   taskQueue: [
     'clean',
     'copy',
-    'sass',
     'browserify',
     'revCompile',
     'revReplace'
+    // 'sass',
     // 'standard',
   ]
 })
