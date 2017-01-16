@@ -49,6 +49,6 @@ rhizome/tests/_data/eoc_post_campaign*
 rhizome/docs/_build
 migration_data/geo/*
 
-webapp/public/
+webapp/public/*
 bower_components/
 node_modules/
