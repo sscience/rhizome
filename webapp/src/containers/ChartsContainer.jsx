@@ -59,7 +59,7 @@ var ChartsContainer = React.createClass({
       <tr>
         <td colSpan='3'>
           No charts created yet.{' '}
-          <a href='/charts/create' className='underlined'>Create your first chart</a>
+          <a href='/charts/create' className='underlined'>Create CREATE A CHART first chart</a>
         </td>
       </tr>
     )
@@ -94,7 +94,7 @@ var ChartsContainer = React.createClass({
     return (
       <div className='row'>
         <div className='medium-12 medium-centered columns'>
-          <h2 className='all-dashboard left'>All Saved Charts</h2>
+          <h2 className='all-dashboard left'>All Charts</h2>
           <a href='/charts/create' className='button success right'>Create New Chart</a>
           <table>
             <thead>

@@ -87,7 +87,7 @@ $ docker exec -it rhizome_db_1 psql -U postgres
 To enter into the gulp watcher..
 
 ```
-$ docker exec -it rhizome_fe_1 bash
+$ docker exec -it rhizome_fe_1 bash 
 ```
 
 

@@ -8,6 +8,7 @@ import dom from 'utilities/dom'
 class Dropdown extends Component {
 
   constructor (props) {
+    console.log('helo')
     super(props)
     this.state = {
       open: false,

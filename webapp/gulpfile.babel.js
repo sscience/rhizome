@@ -15,7 +15,7 @@ gulp.config('tasks', requireDir('./tasks/config'))
 
 gulp.config('tasks.build', {
   taskQueue: [
-    'clean',
+    // 'clean',
     'copy',
     'sass',
     'browserify',

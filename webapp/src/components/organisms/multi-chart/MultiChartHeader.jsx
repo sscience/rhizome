@@ -64,14 +64,14 @@ const MultiChartHeader = React.createClass({
       <TitleInput initialText={chart.title} save={this._toggleTitleEdit}/>
     ) : (
       <h2>
-        <a onClick={this._toggleTitleEdit} style={{cursor: 'text'}}>{chart.title || 'Untitled Chart'}</a>
+        <a onClick={this._toggleTitleEdit} style={{cursor: 'text'}}>{chart.title || 'yyyyy'}</a>
       </h2>
     )
 
     return (
       <header className='row chart-header'>
         <div className='medium-12 columns'>
-          { props.readOnlyMode ? <h2>{chart.title || 'Untitled Chart'}</h2> : editable_title }
+          { props.readOnlyMode ? <h2>{chart.title || 'zzzzz'}</h2> : editable_title }
          <div className='chart-actions'>
             { chart_actions }
             { props.readOnlyMode ? null : show_options_button }

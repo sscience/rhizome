@@ -8,19 +8,16 @@ import RadioGroup from 'components/form/RadioGroup'
 
 import builderDefinitions from 'components/d3chart/utils/builderDefinitions'
 import IconButton from 'components/button/IconButton'
-import CampaignMultiSelect from 'components/multi_select/CampaignMultiSelect'
 import IndicatorMultiSelect from 'components/multi_select/IndicatorMultiSelect'
 import LocationMultiSelect from 'components/multi_select/LocationMultiSelect'
 import DateMultiSelect from 'components/select/DateRangeSelect'
 
 import LocationStore from 'stores/LocationStore'
 import IndicatorStore from 'stores/IndicatorStore'
-import CampaignStore from 'stores/CampaignStore'
 
 const MultiChartControls = React.createClass({
 
   mixins: [
-    Reflux.connect(CampaignStore, 'campaigns'),
     Reflux.connect(LocationStore, 'locations'),
     Reflux.connect(IndicatorStore, 'indicators')
   ],
@@ -30,10 +27,6 @@ const MultiChartControls = React.createClass({
     setDateRange: PropTypes.func,
     setGroupBy: PropTypes.func,
     setPalette: PropTypes.func,
-    selectCampaign: PropTypes.func,
-    deselectCampaign: PropTypes.func,
-    setCampaigns: PropTypes.func,
-    linkCampaigns: PropTypes.func,
     selectLocation: PropTypes.func,
     deselectLocation: PropTypes.func,
     setLocations: PropTypes.func,
@@ -67,19 +60,14 @@ const MultiChartControls = React.createClass({
           onChange={props.setGroupByTime}
           horizontal
           values={[
-            {value: 'campaign', title: 'Campaign'},
+            {value: 'flat', title: 'flat'},
             {value: 'quarter', title: 'Quarter'},
             {value: 'year', title: 'Year'}
           ]}/>
       </div>
     )
 
-    const chartShowsOneCampaign = chart.groupByTime === 'campaign' && type !== 'RawData'
-    // the date range picker handles date range and campaign selection //
-    // if the user selects "campaign" in time groupings, they see a campaign
-    // selector, otherwise they see a date range filter
-    const date_range_picker = !chartShowsOneCampaign ? (
-      <div className='medium-12 columns'>
+    const date_range_picker = <div className='medium-12 columns'>
         <h3>Date Range</h3>
         <DateMultiSelect
           sendValue={props.setDateRange}
@@ -90,18 +78,6 @@ const MultiChartControls = React.createClass({
         <br/>
         <br/>
       </div>
-    ) : (
-      <CampaignMultiSelect
-        campaigns={this.state.campaigns}
-        selected_campaigns={chart.selected_campaigns}
-        selectCampaign={props.selectCampaign}
-        deselectCampaign={props.deselectCampaign}
-        setCampaigns={props.setCampaigns}
-        linkCampaigns={props.linkCampaigns}
-        classes='medium-12 columns'
-        linked={chart.linkedCampaigns}
-      />
-    )
 
     const group_by_selector = groupedChart ? (
       <div className='medium-12 columns radio-group'>
