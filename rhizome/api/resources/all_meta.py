@@ -42,8 +42,13 @@ class AllMetaResource(BaseNonModelResource):
         qs = []
         am_result = AllMetaResult()
         am_result.campaigns = []
-        am_result.charts = \
-            list(CustomChart.objects.all().values())
+        am_result.charts = [{
+            'chart_json': x.chart_json,
+            'uuid': x.uuid,
+            'id': x.id,
+            'title':x.title
+        } for x in CustomChart.objects.all()]
+
         am_result.dashboards = \
             list(CustomDashboard.objects.all().values())
         am_result.indicators = \
@@ -55,7 +60,7 @@ class AllMetaResource(BaseNonModelResource):
 
         am_result.locations = list(Location.objects.all().values())
         am_result.is_superuser = User.objects.get(
-            id=request.user.id).is_superuser
+            id=request.user.id).is_superuser    
         qs.append(am_result)
 
         return [x.__dict__ for x in qs]

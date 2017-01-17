@@ -37,10 +37,6 @@ fe:
     - ./webapp/src:/watcher-app/src
     - ./webapp/public/static:/watcher-app/public/static
     - ./webapp/gulpfile.babel.js:/watcher-app/gulpfile.babel.js
-
-    # - ./webapp/tasks:/watcher-app/tasks
-    # - staticVolume:/watcher-app/public/static/js
-    # - ./webapp/public/static/js/js:/watcher-app/public/static/js
   working_dir: /watcher-app
   env_file:
     - .env-example

@@ -140,6 +140,7 @@ var DashboardChartsStore = Reflux.createStore({
         type: chart.type,
         start_date: chart.start_date,
         end_date: chart.end_date,
+        campaign_ids: [],
         location_ids: chart.selected_locations.map(location => location.id),
         indicator_ids: chart.selected_indicators.map(indicator => indicator.id),
         indicator_colors: chart.indicator_colors,
