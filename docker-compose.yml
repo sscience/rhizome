@@ -9,7 +9,8 @@ rhizome:
     - 9090:9090
   volumes:
     - .:/rhizome
-
+  env_file:
+    - .env
   working_dir: /rhizome
   entrypoint: /rhizome/bin/start.sh
 
@@ -22,12 +23,7 @@ db:
     - 5432:5432
   hostname: psqlserver
   env_file:
-  - .env-example
-  environment:
-    POSTGRES_DB: rhizome
-    POSTGRES_USER: djangoapp
-    POSTGRES_PASSWORD: w3b@p01i0
-    SECRET_KEY: 1234mxmxmxmxm
+    - .env
 
 fe:
   restart: always
@@ -39,5 +35,5 @@ fe:
     - ./webapp/gulpfile.babel.js:/watcher-app/gulpfile.babel.js
   working_dir: /watcher-app
   env_file:
-    - .env-example
+    - .env
   command: gulp dev

@@ -13,6 +13,7 @@ ADD package.json /watcher-app/package.json
 ADD external /watcher-app/external
 
 RUN npm install
+RUN npm cache clean
 
 ADD gulpfile.babel.js /watcher-app/gulpfile.babel.js
 ADD . /watcher-app

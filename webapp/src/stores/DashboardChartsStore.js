@@ -34,7 +34,7 @@ class ChartState {
     this.selected_indicators = []
     this.selected_locations = []
     this.end_date = moment().format('YYYY-MM-DD')
-    this.start_date = moment().subtract(1, 'y').format('YYYY-MM-DD')
+    this.start_date = moment().subtract(3, 'y').format('YYYY-MM-DD')
     this.features = []
     this.loading = false
     this.linkedCampaigns = false

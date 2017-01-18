@@ -18,21 +18,13 @@ STATIC_URL = '/static/'
 SITE_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), '')
 STATIC_ROOT = os.path.join(SITE_ROOT, '../static')
 
-# todo for hashed we can use this
-# http://blogs.skicelab.com/maurizio/django-serving-hashed-static-files-with-nginx.html
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'webapp/public/static')
 ]
 
 LOGIN_REDIRECT_URL = '/'
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    'SECRET_KEY', os.getenv('SECRET_KEY','some_secret_key'))
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -101,11 +93,11 @@ WSGI_APPLICATION = 'rhizome.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME', 'rhizome'),
-        'USER': os.getenv('DB_USER', 'djangoapp'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'w3b@p01i0'),
-        'HOST': os.getenv('DB_HOST', 'psqlserver'),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT')
     }
 }
 
@@ -131,19 +123,11 @@ ODK_SETTINGS = {
     }
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'EST'
-
-USE_I18N = True
-
-USE_L10N = True
-
-USE_TZ = True
 
 # Template configuration
 TEMPLATE_DIRS = (
@@ -181,12 +165,30 @@ TASTYPIE_FULL_DEBUG = True
 INTERNAL_IPS = ('127.0.0.1',)
 
 # Flags for the Menu (SOP, C4D, Data)
-FLAG_SOP = True
-FLAG_C4D = False
-FLAG_DATA = True
 
 ## for a new instance -- put the 2 letter codes cooresponding to the countries
 ## you want to ingest maps for.  See here for more info http://code.highcharts.com/mapdata/
 COUNTRY_LIST = os.getenv('COUNTRY_SHAPE_LIST', 'lb').split(',')
 ## . 'http://code.highcharts.com/mapdata/countries/lb/lb-all.geo.json'
 ## . 'http://code.highcharts.com/mapdata/countries/sy/sy-all.geo.json'
+
+
+######################
+### FOR TESTING... ###
+######################
+
+# class DisableMigrations(object):
+#
+#     def __contains__(self, item):
+#         return True
+#
+#     def __getitem__(self, item):
+#         return "notmigrations"
+#
+# MIGRATION_MODULES = DisableMigrations()
+# MEDIA_ROOT = 'rhizome/tests/_data/'
+#
+# DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
+# DATABASES['default']['NAME'] = 'rhizome'
+#
+# USE_TZ = False

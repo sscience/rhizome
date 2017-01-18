@@ -56,7 +56,7 @@ documentRank: 3
 
 ```
 		from rhizome.pdf_utils import print_pdf
-		from rhizome.settings.base import STATICFILES_DIRS
+    from django.conf.settings import STATICFILES_DIRS
 
 		def export_file(request):
     file_type = request.GET['type']
@@ -242,7 +242,6 @@ documentRank: 3
 4. wkhtmltopdf
 
   ```
-  from rhizome.settings.base import STATICFILES_DIRS
 
   css_file = 'file://' + STATICFILES_DIRS[0] + '/css/pdf.css'
     ...

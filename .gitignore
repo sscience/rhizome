@@ -38,7 +38,6 @@ webapp/src/assets/js
 webapp/npm-debug.log
 bower_components
 rhizome/settings/private.py
-settings.py
 dev
 webapp/coverage
 ~$*
@@ -52,3 +51,4 @@ migration_data/geo/*
 webapp/public/*
 bower_components/
 node_modules/
+.env

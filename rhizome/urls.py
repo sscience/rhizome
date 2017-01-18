@@ -16,14 +16,6 @@ from rhizome import views
 
 admin.autodiscover()
 
-# import pkgutil
-#
-# # this is the package we are inspecting -- for example 'email' from stdlib
-# import email
-#
-# package = email
-# for importer, modname, ispkg in pkgutil.iter_modules(package.__path__):
-#     print "Found submodule %s (is a package: %s)" % (modname, ispkg)
 
 ######################
 # TASTYPIE Endpoints #
@@ -85,9 +77,6 @@ protected_patterns = [
     url(r'^dashboards/$', views.dashboards, name='dashboards'),
     url(r'^dashboards/create$', views.dashboard_create, name='dashboard_create'),
     url(r'^dashboards/(?P<dashboard_id>[0-9]+)', views.dashboard, name='dashboard'),
-
-    ## react app -- some day this will be the only ( non api ) url ##
-    url(r'^react_app', views.react_app, name='react_app'),
 
 ]
 
