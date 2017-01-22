@@ -15,6 +15,9 @@ from rhizome.cache_meta import minify_geo_json, LocationTreeCache
 
 from django.conf import settings
 
+from pprint import pprint
+
+
 def populate_geo_data(apps, schema_editor):
     '''
     Here, we take an excel file that has the same schema as the database
@@ -70,8 +73,9 @@ def create_country_meta_data(c):
     )
 
     # create the top level country #
+    country_name = features[0]['properties']['country']
     country_loc_object = Location.objects.create(
-        name = 'Lebanon',
+        name = country_name,
         location_code = c,
         location_type_id = country_lt.id
     )
@@ -95,20 +99,15 @@ def process_geo_row(ix, row, country_loc_object, province_lt):
     except KeyError as err: # not a location since it does not have name field
         print err
 
-    try:
-        with transaction.atomic():
-            province_loc_object = Location.objects.create(**province_dict)
-    except IntegrityError as err:
-        print err
+    province_loc_object, created = Location.objects\
+        .get_or_create(name=row_properties['name'], defaults=province_dict)
 
-        alt_name = row_properties['woe-name']
-        province_dict['name'] = alt_name
-        province_loc_object = Location.objects.create(**province_dict)
+    if not created: # high charts has dupes .. see parwan..
 
-    # create the proivince shapes #
-    LocationPolygon.objects.create(
-        geo_json = row_geo, location_id = province_loc_object.id
-    )
+        # create the proivince shapes #
+        LocationPolygon.objects.create(
+            geo_json = row_geo, location_id = province_loc_object.id
+        )
 
 
 def model_df_to_data(model_df, model):
