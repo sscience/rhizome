@@ -19,7 +19,7 @@ SITE_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), '')
 STATIC_ROOT = os.path.join(SITE_ROOT, '../static')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'webapp/public/static')
+    os.path.join(BASE_DIR, 'static')
 ]
 
 LOGIN_REDIRECT_URL = '/'

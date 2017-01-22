@@ -51,4 +51,6 @@ migration_data/geo/*
 webapp/public/*
 bower_components/
 node_modules/
+
+static
 .env

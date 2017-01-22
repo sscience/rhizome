@@ -24,6 +24,7 @@ class Dropdown extends Component {
   componentDidUpdate = () => {
     if (this.state.open) {
 
+      console.log('hey')
       var offset = dom.documentOffset(React.findDOMNode(this))
       var x = (offset.right + offset.left) / 2
 
