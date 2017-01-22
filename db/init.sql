@@ -1,0 +1,3 @@
+CREATE USER djangoapp;
+CREATE DATABASE rhizome;
+GRANT ALL PRIVILEGES ON DATABASE rhiozme TO djangoapp;

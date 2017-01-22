@@ -93,11 +93,11 @@ WSGI_APPLICATION = 'rhizome.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT')
+        'NAME': os.getenv('POSTGRES_DB'),
+        'USER': os.getenv('POSTGRES_USER'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+        'HOST': os.getenv('POSTGRES_HOST'),
+        'PORT': os.getenv('POSTGRES_PORT')
     }
 }
 
@@ -168,7 +168,7 @@ INTERNAL_IPS = ('127.0.0.1',)
 
 ## for a new instance -- put the 2 letter codes cooresponding to the countries
 ## you want to ingest maps for.  See here for more info http://code.highcharts.com/mapdata/
-COUNTRY_LIST = os.getenv('COUNTRY_SHAPE_LIST', 'lb').split(',')
+COUNTRY_LIST = os.getenv('COUNTRY_SHAPE_LIST', '').split(',')
 ## . 'http://code.highcharts.com/mapdata/countries/lb/lb-all.geo.json'
 ## . 'http://code.highcharts.com/mapdata/countries/sy/sy-all.geo.json'
 
