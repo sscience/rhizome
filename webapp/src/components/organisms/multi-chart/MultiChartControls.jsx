@@ -60,8 +60,6 @@ const MultiChartControls = React.createClass({
           onChange={props.setGroupByTime}
           horizontal
           values={[
-            {value: 'flat', title: 'flat'},
-            {value: 'quarter', title: 'Quarter'},
             {value: 'year', title: 'Year'}
           ]}/>
       </div>
@@ -96,16 +94,21 @@ const MultiChartControls = React.createClass({
     let depth_titles = null
     let location_depth_selector = null
     if (chart.selected_locations.length > 0) {
+      // fixme -- need location_type to admin level data here.
+      // we should be able to build the "depth_titles" mapping using the
+      // admin level heirarchy.  i
       const location_type_id = chart.selected_locations[0].location_type_id
-      if (location_type_id <= 1) {
-        depth_titles = ['Country', 'Region', 'Province', 'District']
-      } else if (location_type_id === 6) {
-        depth_titles = ['Region', 'Province', 'District']
-      } else if (location_type_id === 2) {
-        depth_titles = ['Province', 'District']
-      } else if (location_type_id === 3) {
-        depth_titles = ['District', 'Cluster']
-      }
+
+      // if (location_type_id <= 1) {
+      //   depth_titles = ['Country', 'Region', 'Province', 'District']
+      // } else if (location_type_id === 18) {
+      //   depth_titles = ['Region', 'Province', 'District']
+      // } else if (location_type_id === 318) {
+      //   depth_titles = ['Province', 'District']
+      // } else if (location_type_id === 3) {
+      //   depth_titles = ['District', 'Cluster']
+      // }
+      depth_titles = ['Province', 'District']
       let depth_options = depth_titles.map((title, index) => ({value: index, title: title}))
       if (location_type_id <= 1 && (chart.type === 'BubbleMap' || chart.type === 'MapChart')) {
         depth_options.splice(1, 1) // Hide region option if BubbleMap since no Geo Data exists for regions
