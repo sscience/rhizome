@@ -57,8 +57,11 @@ class Document(models.Model):
 
     def build_csv_df(self):
 
-        self.location_column, self.uq_id_column, self.date_column = \
-            ['geocode', 'unique_key', 'data_date']
+        ## FIXME - pull these from document detail as the user should be
+        ## allowed to set these column configurations
+        self.location_column, self.uq_id_column, self.date_column, \
+        self.lat_column, self.lon_column = \
+            ['city', 'unique_key', 'data_date', 'latitude', 'longitude']
 
         raw_csv_df = read_csv(settings.MEDIA_ROOT + str(self.docfile))
 
@@ -103,7 +106,10 @@ class Document(models.Model):
 
         for submission in self.csv_df.itertuples():
 
-            ss, instance_guid = self.process_raw_source_submission(submission)
+            try:
+                ss, instance_guid = self.process_raw_source_submission(submission)
+            except Exception as err:
+                logging.warning(err.args)
 
             if ss is not None and instance_guid is not None:
                 ss['instance_guid'] = instance_guid
@@ -198,10 +204,10 @@ class Document(models.Model):
         submission_dict = {
             'submission_json': submission_data,
             'document_id': self.id,
-            'data_date': '2016-01-01',# parse(submission_data[self.date_column]),
+            'data_date': parse(submission_data[self.date_column]),
             'row_number': submission_ix,
-            'latitude': submission_data[self.lat_column],
-            'longitude': submission_data[self.lon_column],
+            'latitude': submission_data[self.lat_column] or 0, #FIXME make nullable in model
+            'longitude': submission_data[self.lon_column] or 0,  #FIXME make nullable in model
             'location_code': submission_data[self.location_column],
             'instance_guid': submission_data[self.uq_id_column],
             'process_status': 'TO_PROCESS',
@@ -564,8 +570,8 @@ class SourceSubmission(models.Model):
     row_number = models.IntegerField()
     data_date = models.DateTimeField(null=True)
     location_code = models.CharField(max_length=1000)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    latitude = models.FloatField(null=True)
+    longitude = models.FloatField(null=True)
     location_display = models.CharField(max_length=1000)
     submission_json = JSONField()
     created_at = models.DateTimeField(auto_now=True)

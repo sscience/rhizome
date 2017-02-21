@@ -138,17 +138,7 @@ var DocForm = React.createClass({
       <div>
           <div style={borderStyle} className='medium-12 columns'>
             <Dropzone onDrop={this.onDropDateData} style={dropZoneStyle}>
-              <div style={uploadButtonStyle}>Date Data</div>
-            </Dropzone>
-          </div>
-        </div>
-    )
-
-    let dropZoneCampaign = (
-      <div>
-          <div style={borderStyle} className='medium-12 columns'>
-            <Dropzone onDrop={this.onDropCampaign} style={dropZoneStyle}>
-              <div style={uploadButtonStyle}>Campaign Data</div>
+              <div style={uploadButtonStyle}>Upload Data</div>
             </Dropzone>
           </div>
         </div>
@@ -156,8 +146,7 @@ var DocForm = React.createClass({
 
     let dropZone = (
       <div className='row'>
-        <div className='medium-6 columns'> {dropZoneDate} </div>
-        <div className='medium-6 columns'> {dropZoneCampaign} </div>
+        <div className='medium-12 columns'> {dropZoneDate} </div>
       </div>
     )
 
