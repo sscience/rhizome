@@ -138,7 +138,7 @@ class DateDatapointResource(BaseModelResource):
         self.end_date = request.GET.get('end_date', None) or \
             request.GET.get('campaign_end', None)
         self.location_id = request.GET.get('location_id', None)
-        self.location_depth = request.GET.get('location_depth', 0)
+        self.location_depth = 0 # FIXME on front end. request.GET.get('location_depth', 0)
 
         self.location_ids = None
         location_ids = request.GET.get('location_id__in', None)
@@ -173,22 +173,19 @@ class DateDatapointResource(BaseModelResource):
 
     def get_time_group_series(self, dp_df):
 
-        if dp_df['data_date'][0] == None:
-            raise RhizomeApiException('This is a campaign (not date) indicator')
+        # if self.time_gb == 'year':
+        #     dp_df['time_grouping'] = dp_df[
+        #         'data_date'].map(lambda x: int(x.year))
+        # elif self.time_gb == 'quarter':
+        #     dp_df['time_grouping'] = dp_df['data_date']\
+        #         .map(lambda x: str(x.year) + str((x.month - 1) // 3 + 1))
+        # else:
+        #     dp_df['time_grouping'] = dp_df['data_date']
 
-        if self.time_gb == 'year':
-            dp_df['time_grouping'] = dp_df[
-                'data_date'].map(lambda x: int(x.year))
-        elif self.time_gb == 'quarter':
-            dp_df['time_grouping'] = dp_df['data_date']\
-                .map(lambda x: str(x.year) + str((x.month - 1) // 3 + 1))
-        elif self.time_gb == 'all_time':
-            dp_df['time_grouping'] = 1
-        else:
-            dp_df = DataFrame()
+        dp_df['time_grouping'] = dp_df['data_date']
 
         ## find the unique possible groupings for this time range and gb param
-        ## sketchy -- this wont work for quarter groupingings, only years.
+        ## FIXME -- this wont work for quarter groupingings, only years.
         self.distinct_time_groupings = list(dp_df.time_grouping.unique())
         if not self.distinct_time_groupings:
             start_yr, end_yr = self.start_date[0:4],\
@@ -226,11 +223,6 @@ class DateDatapointResource(BaseModelResource):
                     on each district
         '''
 
-        # FIXME - remove this guid and figure out better logic for this
-        chart_uuid = request.GET.get('chart_uuid', None)
-        if chart_uuid and chart_uuid == '5599c516-d2be-4ed0-ab2c-d9e7e5fe33be':
-            return custom_logic.handle_polio_case_table(self)
-
         if self.location_ids:
             return self.handle_discrete_location_request()
 
@@ -252,22 +244,38 @@ class DateDatapointResource(BaseModelResource):
                 parent_location_id = self.location_ids,
             ).values_list(*loc_tree_df_columns)),columns = loc_tree_df_columns)
 
+            print '==-loc_tree_df-=='
+            print loc_tree_df[:5]
+            print '==-loc_tree_df-=='
+
             dp_loc_ids = [self.location_id]
             if self.location_depth > 0:
                     dp_loc_ids = list(loc_tree_df['location_id'].unique())
 
             dp_df = DataFrame(list(DataPoint.objects.filter(
-                    location_id__in = dp_loc_ids,
+                    # location_id__in = dp_loc_ids,
                     indicator_id__in = self.indicator__in,
                     data_date__gte = self.start_date,
                     data_date__lte = self.end_date
                 ).values(*self.dp_df_columns)), columns=self.dp_df_columns)
 
+            print '==-dp_df-=='
+            print dp_df[:5]
+            print '==-dp_df-=='
+
         if len(dp_df) == 0:
             return []
 
-        dp_df = self.get_time_group_series(dp_df)
-        merged_df = dp_df.merge(loc_tree_df)
+        time_grouped_dp_df = self.get_time_group_series(dp_df)
+
+        print '=time_grouped_dp_df=\n' * 5
+        print time_grouped_dp_df[:5]
+        print '=time_grouped_dp_df=\n' * 5
+
+        merged_df = time_grouped_dp_df.merge(loc_tree_df)
+
+        print '==merged_df=\n' * 5
+        print merged_df[:5]
 
         ## sum all values for locations with the same parent location
         gb_df = DataFrame(merged_df
@@ -275,11 +283,15 @@ class DateDatapointResource(BaseModelResource):
               .sum())\
               .reset_index()
 
+
         gb_df = gb_df.rename(columns={
             'parent_location_id': 'location_id',
             })
 
         gb_df = gb_df.rename(columns={'parent_location_id': 'location_id'})
         gb_df = gb_df.sort(['time_grouping'], ascending=[1])
+
+        print '==gp_df=\n' * 5
+        print gb_df[:5]
 
         return gb_df

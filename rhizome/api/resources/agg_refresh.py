@@ -1,7 +1,8 @@
 from rhizome.api.resources.base_non_model import BaseNonModelResource
 from rhizome.api.exceptions import RhizomeApiException
-from rhizome.models.campaign_models import Campaign
 
+
+# FIXME -- REMOVE THIS 
 
 class AggRefreshResource(BaseNonModelResource):
     '''
@@ -24,15 +25,5 @@ class AggRefreshResource(BaseNonModelResource):
         '''
 
         campaign_id = request.GET.get('campaign_id')
-        return Campaign.objects.filter(id=campaign_id)
 
-    def pre_process_data(self, request):
-        '''
-        Run the aggrefresh for the requested Campaign
-        '''
-        campaign_id = request.GET.get('campaign_id', None)
-        try:
-            campaign_object = Campaign.objects.get(id=campaign_id)
-        except Campaign.DoesNotExist as err:
-            raise RhizomeApiException(err)
-        campaign_object.aggregate_and_calculate()
+        return []

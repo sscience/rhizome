@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 
-python ./manage.py syncdb --noinput
-python ./manage.py migrate --noinput
+./manage.py syncdb --noinput
+./manage.py migrate --noinput
 
-python ./manage.py runserver 0.0.0.0:8000
+./manage.py collectstatic --noinput
+
+./manage.py runserver 0.0.0.0:9090

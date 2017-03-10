@@ -1,7 +1,6 @@
 from rhizome.api.resources.base_non_model import BaseNonModelResource
 from rhizome.models.document_models import Document, SourceSubmission
 from rhizome.models.datapoint_models import DataPoint
-from rhizome.models.campaign_models import Campaign
 
 class DocTransFormResource(BaseNonModelResource):
     '''
@@ -36,15 +35,5 @@ class DocTransFormResource(BaseNonModelResource):
 
         document_object.transform_upload()
         document_object.refresh_master()
-
-        if document_object.file_type == 'campaign':
-            doc_campaign_ids = set(list(DataPoint.objects
-                .filter(source_submission__document_id=document_object.id)
-                .values_list('campaign_id', flat=True)))
-
-            for c_id in doc_campaign_ids:
-                campaign_object = Campaign.objects.get(id = c_id)
-                campaign_object.aggregate_and_calculate()
-
 
         return Document.objects.filter(id=document_object.id).values()

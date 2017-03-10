@@ -71,7 +71,7 @@ const MultiChartHeader = React.createClass({
     return (
       <header className='row chart-header'>
         <div className='medium-12 columns'>
-          { props.readOnlyMode ? <h2>{chart.title || 'Untitled Chart'}</h2> : editable_title }
+          { props.readOnlyMode ? <h2>{chart.title || 'zzzzz'}</h2> : editable_title }
          <div className='chart-actions'>
             { chart_actions }
             { props.readOnlyMode ? null : show_options_button }

@@ -1,27 +1,15 @@
-FROM python:2.7
+FROM chuckus/python-2.7-alpine-pandas
 
-ENV INSTANCE=docker
-
-# Download and install wkhtmltopdf
-RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install sudo
-RUN sudo apt-get install -y xvfb
-RUN sudo apt-get -y install python-pandas
-#RUN sudo apt-get remove -y wkhtmltopdf
-
-# The version for local Debian env
-RUN sudo apt-get install -y xfonts-75dpi
-RUN wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-RUN sudo dpkg -i wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-RUN rm wkhtmltox-0.12.2.1_linux-jessie-amd64.deb
-
-# The version for server Ubuntu env
-# RUN wget http://download.gna.org/wkhtmltopdf/0.12/0.12.2.1/wkhtmltox-0.12.2.1_linux-trusty-amd64.deb
-# RUN sudo dpkg -i wkhtmltox-0.12.2.1_linux-trusty-amd64.deb
-# RUN rm wkhtmltox-0.12.2.1_linux-trusty-amd64.deb
+RUN apk update \
+  && apk add --virtual build-deps libc-dev python-dev gcc python-dev musl-dev \
+  && apk add postgresql-dev \
+  && pip install psycopg2==2.6.1 \
+  && apk del build-deps
 
 COPY ./requirements.txt /tmp/
+
 RUN pip install --requirement /tmp/requirements.txt
+
+RUN ln -s /usr/bin/gcc-5.3.0-r0 /usr/bin/gcc
 
 WORKDIR '/rhizome'

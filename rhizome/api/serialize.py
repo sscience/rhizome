@@ -6,7 +6,6 @@ from django.core.serializers import json as djangojson
 from pandas import DataFrame
 from tastypie.serializers import Serializer
 
-import rhizome.models.campaign_models as c_m
 from rhizome.models.indicator_models import Indicator
 from rhizome.models.location_models import Location
 
@@ -210,9 +209,6 @@ class CustomSerializer(Serializer):
 
         for r in Location.objects.filter(id__in=location_ids):
             meta_lookup['location'][r.id] = r.__unicode__()
-
-        for c in c_m.Campaign.objects.filter(id__in=campaign_ids):
-            meta_lookup['campaign'][c.id] = c.__unicode__()
 
         for ind in Indicator.objects.filter(id__in=indicator_ids):
             meta_lookup['indicator'][ind.id] = ind.__unicode__()

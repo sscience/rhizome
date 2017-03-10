@@ -193,18 +193,22 @@ def minify_geo_json():
     for shp in LocationPolygon.objects.all():
 
         new_polygon_list = []
-        geo_json = json.loads(shp.geo_json)
-        polygon = geo_json['geometry']['coordinates']
+        if type(shp.geo_json) == dict:
+            geo_dict = { 'geometry': shp.geo_json }
+        else:
+            geo_dict = json.loads(shp.geo_json)
 
-        if geo_json['geometry']['type'] == 'Polygon':  # MultiPolygons trip me up ##
+        polygon = geo_dict['geometry']['coordinates']
+
+        if geo_dict['geometry']['type'] == 'Polygon':  # MultiPolygons trip me up ##
 
             min_polygon = minify_polygon(polygon)
             new_polygon_list.append(min_polygon)
 
-            geo_json['geometry']['coordinates'] = new_polygon_list
+            geo_dict['geometry']['coordinates'] = new_polygon_list
 
         shp_obj = \
-            MinGeo(**{'location_id': shp.location_id, 'geo_json': geo_json})
+            MinGeo(**{'location_id': shp.location_id, 'geo_json': geo_dict})
         min_geo_batch.append(shp_obj)
 
     MinGeo.objects.all().delete()
@@ -236,4 +240,4 @@ def cache_all_meta():
     indicator_cache_data = IndicatorCache()
     indicator_cache_data.main()
 
-    # minify_geo_json()
+    source_object_cache = update_source_object_names()

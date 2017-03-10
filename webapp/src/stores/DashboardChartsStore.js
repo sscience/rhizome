@@ -34,7 +34,7 @@ class ChartState {
     this.selected_indicators = []
     this.selected_locations = []
     this.end_date = moment().format('YYYY-MM-DD')
-    this.start_date = moment().subtract(1, 'y').format('YYYY-MM-DD')
+    this.start_date = moment().subtract(3, 'y').format('YYYY-MM-DD')
     this.features = []
     this.loading = false
     this.linkedCampaigns = false
@@ -140,7 +140,7 @@ var DashboardChartsStore = Reflux.createStore({
         type: chart.type,
         start_date: chart.start_date,
         end_date: chart.end_date,
-        campaign_ids: chart.selected_campaigns.map(campaign => campaign.id),
+        campaign_ids: [],
         location_ids: chart.selected_locations.map(location => location.id),
         indicator_ids: chart.selected_indicators.map(indicator => indicator.id),
         indicator_colors: chart.indicator_colors,
@@ -473,7 +473,7 @@ var DashboardChartsStore = Reflux.createStore({
     new_chart.indicator_colors = chart.chart_json.indicator_colors || {}
     new_chart.type_params = chart.chart_json.type_params || {}
     new_chart.groupBy = chart.chart_json.groupBy
-    new_chart.groupByTime = chart.chart_json.groupByTime || 'campaign'
+    new_chart.groupByTime = 'year'
     new_chart.location_depth = chart.chart_json.location_depth || 0
     new_chart.selectTypeMode = false
     new_chart.editMode = false

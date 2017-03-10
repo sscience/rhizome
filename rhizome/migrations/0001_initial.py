@@ -16,8 +16,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UserGroup',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
             ],
             options={
                 'db_table': 'auth_user_groups',
@@ -27,8 +26,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='AggDataPoint',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('value', models.FloatField()),
             ],
             options={
@@ -38,8 +36,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CalculatedIndicatorComponent',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('calculation', models.CharField(max_length=255)),
                 ('created_at', models.DateTimeField(auto_now=True)),
             ],
@@ -50,8 +47,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Campaign',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=255)),
                 ('start_date', models.DateField()),
                 ('end_date', models.DateField()),
@@ -65,8 +61,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CampaignType',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=55)),
             ],
             options={
@@ -76,8 +71,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CustomChart',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('uuid', models.CharField(unique=True, max_length=255)),
                 ('title', models.CharField(unique=True, max_length=255)),
                 ('chart_json', jsonfield.fields.JSONField()),
@@ -89,8 +83,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CustomDashboard',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('title', models.CharField(unique=True, max_length=255)),
                 ('description', models.CharField(max_length=1000)),
                 ('layout', models.IntegerField(default=0, null=True)),
@@ -103,11 +96,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DataPoint',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('data_date', models.DateTimeField()),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('data_date', models.DateTimeField(null=True)),
                 ('value', models.FloatField(null=True)),
                 ('created_at', models.DateTimeField(auto_now=True)),
+                ('unique_index', models.CharField(default=-1, unique=True, max_length=255)),
+                ('campaign', models.ForeignKey(to='rhizome.Campaign', null=True)),
             ],
             options={
                 'db_table': 'datapoint',
@@ -116,8 +110,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DataPointComputed',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('value', models.FloatField()),
                 ('campaign', models.ForeignKey(to='rhizome.Campaign')),
             ],
@@ -128,12 +121,9 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DocDataPoint',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('data_date', models.DateTimeField()),
-                ('campaign', models.ForeignKey(to='rhizome.Campaign', null=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('data_date', models.DateTimeField(null=True)),
                 ('value', models.FloatField(null=True)),
-                ('agg_on_location', models.BooleanField()),
             ],
             options={
                 'db_table': 'doc_datapoint',
@@ -142,8 +132,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DocDetailType',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=255)),
             ],
             options={
@@ -153,18 +142,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Document',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('docfile', models.FileField(
-                    null=True, upload_to=b'documents/%Y/%m/%d')),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('docfile', models.FileField(null=True, upload_to=b'documents/%Y/%m/%d')),
+                ('file_type', models.CharField(max_length=10)),
                 ('doc_title', models.TextField(unique=True)),
                 ('file_header', jsonfield.fields.JSONField(null=True)),
                 ('guid', models.CharField(max_length=255)),
                 ('created_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(
-                    to=settings.AUTH_USER_MODEL, null=True)),
-                ('file_type', models.CharField(default='campaign', max_length=10)),
-                ],
+                ('created_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
+            ],
             options={
                 'ordering': ('-created_at',),
                 'db_table': 'source_doc',
@@ -173,8 +159,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DocumentDetail',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('doc_detail_value', models.CharField(max_length=255)),
                 ('doc_detail_type', models.ForeignKey(to='rhizome.DocDetailType')),
                 ('document', models.ForeignKey(to='rhizome.Document')),
@@ -186,8 +171,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DocumentSourceObjectMap',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('document', models.ForeignKey(to='rhizome.Document')),
             ],
             options={
@@ -197,8 +181,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Indicator',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('short_name', models.CharField(unique=True, max_length=255)),
                 ('name', models.CharField(unique=True, max_length=255)),
                 ('description', models.CharField(max_length=255)),
@@ -210,7 +193,7 @@ class Migration(migrations.Migration):
                 ('good_bound', models.FloatField(null=True)),
                 ('bad_bound', models.FloatField(null=True)),
                 ('source_name', models.CharField(max_length=55)),
-                ('resource_name', models.CharField(default=1, max_length=10)),
+                ('resource_name', models.CharField(max_length=10)),
             ],
             options={
                 'ordering': ('name',),
@@ -220,8 +203,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='IndicatorBound',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('mn_val', models.FloatField(null=True)),
                 ('mx_val', models.FloatField(null=True)),
                 ('bound_name', models.CharField(max_length=255)),
@@ -235,11 +217,9 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='IndicatorTag',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('tag_name', models.CharField(max_length=255)),
-                ('parent_tag', models.ForeignKey(
-                    to='rhizome.IndicatorTag', null=True)),
+                ('parent_tag', models.ForeignKey(to='rhizome.IndicatorTag', null=True)),
             ],
             options={
                 'db_table': 'indicator_tag',
@@ -248,8 +228,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='IndicatorToTag',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('indicator', models.ForeignKey(to='rhizome.Indicator')),
                 ('indicator_tag', models.ForeignKey(to='rhizome.IndicatorTag')),
             ],
@@ -261,8 +240,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Location',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=255)),
                 ('location_code', models.CharField(unique=True, max_length=255)),
                 ('latitude', models.FloatField(null=True, blank=True)),
@@ -277,8 +255,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='LocationPermission',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('top_lvl_location', models.ForeignKey(to='rhizome.Location')),
                 ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
             ],
@@ -289,8 +266,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='LocationPolygon',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('geo_json', jsonfield.fields.JSONField()),
                 ('location', models.OneToOneField(to='rhizome.Location')),
             ],
@@ -301,12 +277,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='LocationTree',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('lvl', models.IntegerField()),
                 ('location', models.ForeignKey(to='rhizome.Location')),
-                ('parent_location', models.ForeignKey(
-                    related_name='ultimate_parent', to='rhizome.Location')),
+                ('parent_location', models.ForeignKey(related_name='ultimate_parent', to='rhizome.Location')),
             ],
             options={
                 'db_table': 'location_tree',
@@ -315,8 +289,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='LocationType',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(unique=True, max_length=55)),
                 ('admin_level', models.IntegerField(unique=True)),
             ],
@@ -327,8 +300,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MinGeo',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('geo_json', jsonfield.fields.JSONField()),
                 ('location', models.OneToOneField(to='rhizome.Location')),
             ],
@@ -337,29 +309,14 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Office',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(max_length=55)),
-                ('created_at', models.DateTimeField(auto_now=True)),
-            ],
-            options={
-                'db_table': 'office',
-                'permissions': (('view_office', 'View office'),),
-            },
-        ),
-        migrations.CreateModel(
             name='SourceObjectMap',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('master_object_id', models.IntegerField()),
                 ('master_object_name', models.CharField(max_length=255, null=True)),
                 ('source_object_code', models.CharField(max_length=255)),
                 ('content_type', models.CharField(max_length=20)),
-                ('mapped_by', models.ForeignKey(
-                    to=settings.AUTH_USER_MODEL, null=True)),
+                ('mapped_by', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
             ],
             options={
                 'db_table': 'source_object_map',
@@ -368,13 +325,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SourceSubmission',
             fields=[
-                ('id', models.AutoField(verbose_name='ID',
-                                        serialize=False, auto_created=True, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('instance_guid', models.CharField(max_length=255)),
                 ('row_number', models.IntegerField()),
                 ('data_date', models.DateTimeField(null=True)),
                 ('location_code', models.CharField(max_length=1000)),
-                ('campaign_code', models.CharField(max_length=1000)),
+                ('latitude', models.FloatField()),
+                ('longitude', models.FloatField()),
                 ('location_display', models.CharField(max_length=1000)),
                 ('submission_json', jsonfield.fields.JSONField()),
                 ('created_at', models.DateTimeField(auto_now=True)),
@@ -389,11 +346,6 @@ class Migration(migrations.Migration):
             model_name='location',
             name='location_type',
             field=models.ForeignKey(to='rhizome.LocationType'),
-        ),
-        migrations.AddField(
-            model_name='location',
-            name='office',
-            field=models.ForeignKey(to='rhizome.Office'),
         ),
         migrations.AddField(
             model_name='location',
@@ -436,11 +388,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to='rhizome.Location'),
         ),
         migrations.AddField(
-            model_name='datapointcomputed',
-            name='document',
-            field=models.ForeignKey(to='rhizome.Document'),
-        ),
-        migrations.AddField(
             model_name='datapoint',
             name='indicator',
             field=models.ForeignKey(to='rhizome.Indicator'),
@@ -452,18 +399,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='datapoint',
-            name='campaign',
-            field=models.ForeignKey(to='rhizome.Campaign', null=True),
-        ),
-        migrations.AddField(
-            model_name='datapoint',
             name='source_submission',
             field=models.ForeignKey(to='rhizome.SourceSubmission'),
-        ),
-        migrations.AddField(
-            model_name='datapoint',
-            name='unique_index',
-            field=models.CharField(default=-1, unique=True, max_length=255),
         ),
         migrations.AddField(
             model_name='campaign',
@@ -471,21 +408,14 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(to='rhizome.CampaignType'),
         ),
         migrations.AddField(
-            model_name='campaign',
-            name='office',
-            field=models.ForeignKey(to='rhizome.Office'),
-        ),
-        migrations.AddField(
             model_name='calculatedindicatorcomponent',
             name='indicator',
-            field=models.ForeignKey(
-                related_name='indicator_master', to='rhizome.Indicator'),
+            field=models.ForeignKey(related_name='indicator_master', to='rhizome.Indicator'),
         ),
         migrations.AddField(
             model_name='calculatedindicatorcomponent',
             name='indicator_component',
-            field=models.ForeignKey(
-                related_name='indicator_component', to='rhizome.Indicator'),
+            field=models.ForeignKey(related_name='indicator_component', to='rhizome.Indicator'),
         ),
         migrations.AddField(
             model_name='aggdatapoint',
@@ -501,15 +431,6 @@ class Migration(migrations.Migration):
             model_name='aggdatapoint',
             name='location',
             field=models.ForeignKey(to='rhizome.Location'),
-        ),
-        migrations.CreateModel(
-            name='DataPointEntry',
-            fields=[
-            ],
-            options={
-                'proxy': True,
-            },
-            bases=('rhizome.datapoint',),
         ),
         migrations.AlterUniqueTogether(
             name='sourcesubmission',
@@ -541,7 +462,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='campaign',
-            unique_together=set([('office', 'start_date')]),
+            unique_together=set([('campaign_type', 'start_date')]),
         ),
         migrations.AlterUniqueTogether(
             name='aggdatapoint',

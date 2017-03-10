@@ -13,7 +13,6 @@ from rhizome.forms import UserCreateForm, UserEditForm
 from rhizome.mixins import PermissionRequiredMixin
 
 from rhizome.pdf_utils import print_pdf
-from rhizome.settings.base import STATICFILES_DIRS
 
 
 def about(request):
@@ -26,7 +25,7 @@ def export_file(request):
     file_type = request.GET['type']
     url = request.GET['path']
     file_name = 'dashboards.' + file_type
-    css_file = 'file://' + STATICFILES_DIRS[0] + '/css/pdf.css'
+    css_file = 'file://' + settings.STATICFILES_DIRS[0] + '/css/pdf.css'
 
     cookie = {}
     cookie['name'] = 'sessionid'
@@ -143,8 +142,6 @@ def manage_system(request):
 def update_campaign(request):
     return render_to_response('manage_system.html',
         context_instance=RequestContext(request))
-
-
 
 class UserCreateView(PermissionRequiredMixin, generic.CreateView):
     model = User
