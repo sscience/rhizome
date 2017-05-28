@@ -1,40 +1,22 @@
 build:
-  image: jprobinson/ae-go-buildbox:1.6
-  environment:
-    - GOPATH=/drone
-  commands:
-    - go test -v -race ./...
-    - go build -o api .
-  when:
-    event:
-      - push
-      - pull_request
+  test:
+    image: python:2.7-alpine
+    environment:
+      ENV: CI
+    commands:
+      - echo "this is a python app  "
+    when:
+      event:
+        - push
 
 # runs `docker build` and `docker push` to the specified GCR
 publish:
   gcr:
-    repo: my-gae-project/api
+    repo: inspiring-cat-165403/rhizome
     tag: "$$COMMIT"
     token: >
-       $$GOOGLE_CREDENTIALS_DEV
+       $$GOOGLE_CREDENTIALS
     storage_driver: overlay
     when:
-      branch: [develop, master]
-      event: push
-
-deploy:
-
-  # deploy a new version using the docker image we just published and stop any previous versions when complete.
-  gae:
-    image: nytimes/drone-gae
-    action: deploy
-    project: my-gae-project
-    flex_image: gcr.io/my-gae-project/puzzles-sub:$$COMMIT
-    version: "$$COMMIT"
-    addl_flags:
-     - --stop-previous-version
-    token: >
-      $$GOOGLE_CREDENTIALS_DEV
-    when:
-      event: push
       branch: master
+      event: push
