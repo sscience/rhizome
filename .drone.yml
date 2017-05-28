@@ -1,0 +1,24 @@
+build:
+  test:
+    image: python:2.7-alpine
+    environment:
+      ENV: CI
+    commands:
+      - echo "this is a python app  "
+    when:
+      event:
+        - push
+
+publish:
+  gcr:
+    storage_driver: overlay
+    registry: us.gcr.io
+    repo: inspiring-cat-165403/image-name
+    tag:
+      - latest
+      - $$COMMIT
+    token: >
+      $$GOOGLE_CREDENTIALS
+    when:
+      branch: master
+      event: push

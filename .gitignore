@@ -53,4 +53,5 @@ bower_components/
 node_modules/
 
 static
+.drone.sec.yaml
 .env
