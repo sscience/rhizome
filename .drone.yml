@@ -16,7 +16,6 @@ publish:
     tag: "$$COMMIT"
     token: >
        $$GOOGLE_CREDENTIALS
-    storage_driver: overlay
     when:
       branch: master
       event: push
