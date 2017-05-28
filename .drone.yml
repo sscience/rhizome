@@ -19,3 +19,19 @@ publish:
     when:
       branch: master
       event: push
+
+deploy:
+
+  gae:
+    image: nytimes/drone-gae
+    action: deploy
+    project: my-gae-project
+    flex_image: gcr.io/inspiring-cat-165403/rhizome:$$COMMIT
+    version: "$$COMMIT"
+    addl_flags:
+     - --stop-previous-version
+    token: >
+      $$GOOGLE_CREDENTIALS
+    when:
+      event: push
+      branch: master
