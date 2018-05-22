@@ -53,7 +53,15 @@ v1_api.register(user.UserResource())
 v1_api.register(all_meta.AllMetaResource())
 v1_api.register(date_doc_results.DateDocResultResource())
 
-protected_patterns = [
+
+urlpatterns = patterns(
+    '',
+    url(r'^api/', include(v1_api.urls)),
+
+    url(r'^about$', views.about, name='about'),
+    url(r'^admin/', decorator_include(login_required, admin.site.urls)),
+    url(r'^accounts/login/$', login, name='login'),
+    url(r'^accounts/logout/$', logout, name='logout'),
 
     url(r'^$', RedirectView.as_view(url='dashboards/'), name='homepage-redirect'),
 
@@ -78,17 +86,6 @@ protected_patterns = [
     url(r'^dashboards/create$', views.dashboard_create, name='dashboard_create'),
     url(r'^dashboards/(?P<dashboard_id>[0-9]+)', views.dashboard, name='dashboard'),
 
-]
-
-urlpatterns = patterns(
-    '',
-    url(r'^api/', include(v1_api.urls)),
-
-    url(r'^about$', views.about, name='about'),
-    url(r'^admin/', decorator_include(login_required, admin.site.urls)),
-    url(r'^accounts/login/$', login, name='login'),
-    url(r'^accounts/logout/$', logout, name='logout'),
-    url(r'^', decorator_include(login_required, protected_patterns)),
 
     # Waffle PATH
     url(r'^', include('waffle.urls')),
