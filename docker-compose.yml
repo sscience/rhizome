@@ -14,7 +14,6 @@ rhizome:
     - .env
   working_dir: /rhizome
   entrypoint: /rhizome/bin/start.sh
-
 db:
   build: db
   restart: always
@@ -25,16 +24,15 @@ db:
   hostname: psqlserver
   env_file:
     - .env
-
-fe:
-  restart: always
-  build: webapp
-  volumes:
-    - ./webapp:/code
-    - ./webapp/src:/watcher-app/src
-    - ./webapp/public/static:/watcher-app/public/static
-    - ./webapp/gulpfile.babel.js:/watcher-app/gulpfile.babel.js
-  working_dir: /watcher-app
-  env_file:
-    - .env
-  command: gulp dev
+# fe:
+#   restart: always
+#   build: webapp
+#   volumes:
+#     - ./webapp:/code
+#     - ./webapp/src:/watcher-app/src
+#     - ./webapp/public/static:/watcher-app/public/static
+#     - ./webapp/gulpfile.babel.js:/watcher-app/gulpfile.babel.js
+#   working_dir: /watcher-app
+#   env_file:
+#     - .env
+#   command: gulp dev
