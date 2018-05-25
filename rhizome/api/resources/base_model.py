@@ -41,9 +41,9 @@ class BaseModelResource(ModelResource, BaseResource):
     '''
 
     class Meta:
-        authentication = MultiAuthentication(
-            CustomSessionAuthentication(), ApiKeyAuthentication())
-        authorization = Authorization()
+        # authentication = MultiAuthentication(
+        #     CustomSessionAuthentication(), ApiKeyAuthentication())
+        # authorization = Authorization()
         always_return_data = True
         allowed_methods = ['get', 'post', 'delete', 'patch']
         cache = CustomCache()

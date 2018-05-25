@@ -14,10 +14,10 @@ class BaseNonModelResource(BaseResource):
     '''
 
     class Meta:
-        authentication = MultiAuthentication(
-            CustomSessionAuthentication(), ApiKeyAuthentication())
+        # authentication = MultiAuthentication(
+        #     CustomSessionAuthentication(), ApiKeyAuthentication())
         allowed_methods = ['get', 'post', 'patch']
-        authorization = Authorization()
+        # authorization = Authorization()
         always_return_data = True
         cache = CustomCache()
         serializer = CustomSerializer()
