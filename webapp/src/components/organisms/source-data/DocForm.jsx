@@ -2,8 +2,8 @@ import _ from 'lodash'
 import React from 'react'
 import Reflux from 'reflux'
 import ExpandableMenuItem from 'components/dropdown/ExpandableMenuItem'
-import Dropzone from 'react-dropzone'
-import ReactJson from 'react-json'
+// import Dropzone from 'react-dropzone'
+// import ReactJson from 'react-json'
 
 import DocFormActions from 'actions/DocFormActions'
 import DocFormStore from 'stores/DocFormStore'
@@ -134,12 +134,16 @@ var DocForm = React.createClass({
 
     var borderStyle = {border: '3px solid #426281'}
 
+    const dz = ''
+      // <Dropzone onDrop={this.onDropDateData} style={dropZoneStyle}>
+      //   <div style={uploadButtonStyle}>Upload Data</div>
+      // </Dropzone>
+
     let dropZoneDate = (
       <div>
           <div style={borderStyle} className='medium-12 columns'>
-            <Dropzone onDrop={this.onDropDateData} style={dropZoneStyle}>
-              <div style={uploadButtonStyle}>Upload Data</div>
-            </Dropzone>
+            {dz}
+
           </div>
         </div>
     )
@@ -158,10 +162,11 @@ var DocForm = React.createClass({
         </div>
       </div>
     )
+    const rjForm = '' // <ReactJson value={{'odk_form_id': ''}} settings={{'form': true, fields: {'odk_form_id': {type: 'string'}}}} ref='form_data'/>
 
     let odkForm = (
         <div className='row'>
-          <ReactJson value={{'odk_form_id': ''}} settings={{'form': true, fields: {'odk_form_id': {type: 'string'}}}} ref='form_data'/>
+          {rjForm}
           <br/>
           <button className='tiny' style={{ textAlign: 'right' }} onClick={ this.processOdkForm}>Process ODK Form</button>
         </div>

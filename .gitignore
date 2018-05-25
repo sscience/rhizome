@@ -1,3 +1,5 @@
+
+node_modules/*
 /webapp/npm-debug.log
 .Python
 .editorconfig
@@ -24,7 +26,6 @@ objects.inv
 /docs/_templates
 /build
 /dist
-node_modules
 environment_seed.env
 *.swp
 .sass-cache
@@ -50,7 +51,6 @@ migration_data/geo/*
 
 webapp/public/*
 bower_components/
-node_modules/
 
 static
 .env

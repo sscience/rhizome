@@ -17,6 +17,7 @@ const DataEntryActions = Reflux.createActions({
 
 DataEntryActions.postDatapoint.listenAndPromise(options => {
   delete options['computed_id']
+  console.log('test')
   let fetch = api.endPoint('/computed_datapoint/', 'POST', 1)
   return fetch(null, null, {'cache-control': 'no-cache'})
 })
