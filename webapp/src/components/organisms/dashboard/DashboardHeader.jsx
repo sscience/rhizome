@@ -10,6 +10,8 @@ import DashboardChartsActions from 'actions/DashboardChartsActions'
 import CampaignSelect from 'components/select/CampaignSelect'
 import LocationSelect from 'components/select/LocationSelect'
 import DistrictSelect from 'components/select/DistrictSelect'
+import CampaignStore from 'stores/CampaignStore'
+import LocationStore from 'stores/LocationStore'
 import RootStore from 'stores/RootStore'
 
 const DashboardHeader = React.createClass({
