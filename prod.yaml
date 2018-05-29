@@ -1,0 +1,36 @@
+runtime: custom
+env: flex
+service: notion-api
+# entrypoint: jupyter notebook --port=8080 --allow-root -y
+# runtime_config:
+#   python_version: 2
+# # This sample incurs costs to run on the App Engine flexible environment.
+# # The settings below are to reduce costs during testing and are not appropriate
+# # for production use. For more information, see:
+# # https://cloud.google.com/appengine/docs/flexible/python/configuring-your-app-with-app-yaml
+# manual_scaling:
+#   instances: 1
+# resources:
+#   cpu: 1
+#   memory_gb: 0.5
+#   disk_size_gb: 10
+
+manual_scaling:
+  instances: 1
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10
+
+
+env_variables:
+  SECRET_KEY: 'aslfksclmnslckwhjeokjqwlfkaslfkasjflakjsflamnfalskj'
+  POSTGRES_DB: ''
+  POSTGRES_USER: ''
+  POSTGRES_PASSWORD: ''
+  POSTGRES_HOST: ''
+  POSTGRES_PORT: 3333
+  COUNTRY_SHAPE_LIST: 'AF'
+
+beta_settings:
+  cloud_sql_instances: sudo-marketing:us-east1:notion-db

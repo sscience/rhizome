@@ -388,10 +388,12 @@ class Document(models.Model):
         location, indicator.
         '''
 
-        filtered_df = df.sort(['source_submission_id'], ascending=False)\
-            .groupby('unique_index').first().reset_index()
+        return df
 
-        return filtered_df
+        # filtered_df = df.sort(['source_submission_id'], ascending=False)\
+        #     .groupby('unique_index').first().reset_index()
+        #
+        # return filtered_df
 
     def sync_datapoint(self, ss_id_list=None):
 

@@ -24,7 +24,7 @@ STATICFILES_DIRS = [
 
 LOGIN_REDIRECT_URL = '/'
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = 'asfafasfasfasfasfsafafasfasfkaf' os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -96,32 +96,40 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DB'),
         'USER': os.getenv('POSTGRES_USER'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
         'PORT': os.getenv('POSTGRES_PORT')
     }
 }
+# In the flexible environment, you connect to CloudSQL using a unix socket.
+# Locally, you can use the CloudSQL proxy to proxy a localhost connection
+# to the instance
+DATABASES['default']['HOST'] = '/cloudsql/sudo-marketing:us-east1:notion-db'
+if os.getenv('GAE_INSTANCE'):
+    pass
+else:
+    DATABASES['default']['HOST'] = '127.0.0.1'
 
-## we allow for connection either KOBO or APP ENGINE aggregate backends
-ODK_SETTINGS = {
-    'kobo': {
-        'KOBO_KEY': os.getenv('KOBO_KEY'),
-        'KOBO_SECRET': os.getenv('KOBO_KEY'),
-    },
-    'app_engine':{
-        # download here:
-        # https://opendatakit.org/downloads/download-info/odk-briefcase/
-        'JAR_FILE': '',
-        'RHIZOME_USERNAME': '',
-        # 'get an API key.. http://stackoverflow.com/questions/10940983/
-        'RHIZOME_KEY': '',
-        'STORAGE_DIRECTORY': '',  # /my/storage/dir',
-        'EXPORT_DIRECTORY': '',  # ' /my/output/dir,
-        'ODK_USER': '',  # my_odk_username
-        'ODK_PASS': '',  # my_odk_password
-        'AGGREGATE_URL': '',  # :'https://my-odk-server.appspot.com/',
-        'API_ROOT': 'http://localhost:8000/api/v1/',
-    }
-}
+#
+# ## we allow for connection either KOBO or APP ENGINE aggregate backends
+# ODK_SETTINGS = {
+#     'kobo': {
+#         'KOBO_KEY': os.getenv('KOBO_KEY'),
+#         'KOBO_SECRET': os.getenv('KOBO_KEY'),
+#     },
+#     'app_engine':{
+#         # download here:
+#         # https://opendatakit.org/downloads/download-info/odk-briefcase/
+#         'JAR_FILE': '',
+#         'RHIZOME_USERNAME': '',
+#         # 'get an API key.. http://stackoverflow.com/questions/10940983/
+#         'RHIZOME_KEY': '',
+#         'STORAGE_DIRECTORY': '',  # /my/storage/dir',
+#         'EXPORT_DIRECTORY': '',  # ' /my/output/dir,
+#         'ODK_USER': '',  # my_odk_username
+#         'ODK_PASS': '',  # my_odk_password
+#         'AGGREGATE_URL': '',  # :'https://my-odk-server.appspot.com/',
+#         'API_ROOT': 'http://localhost:8000/api/v1/',
+#     }
+# }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/

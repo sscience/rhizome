@@ -13,7 +13,6 @@ from tastypie.api import Api
 from rhizome.api.resources import *
 from rhizome.api.decorators import api_debug
 from rhizome import views
-
 admin.autodiscover()
 
 
@@ -53,9 +52,10 @@ v1_api.register(user.UserResource())
 v1_api.register(all_meta.AllMetaResource())
 v1_api.register(date_doc_results.DateDocResultResource())
 
-
 urlpatterns = patterns(
     '',
+
+    url(r'^ok/', views.ok, name='ok'),
     url(r'^api/', include(v1_api.urls)),
 
     url(r'^about$', views.about, name='about'),
@@ -86,15 +86,14 @@ urlpatterns = patterns(
     url(r'^dashboards/create$', views.dashboard_create, name='dashboard_create'),
     url(r'^dashboards/(?P<dashboard_id>[0-9]+)', views.dashboard, name='dashboard'),
 
-
     # Waffle PATH
     url(r'^', include('waffle.urls')),
 
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-if settings.DEBUG:
-    import debug_toolbar
-    urlpatterns += patterns(
-        '',
-        url(r'^api_debug/', api_debug),
-    )
+# if settings.DEBUG:
+#     import debug_toolbar
+#     urlpatterns += patterns(
+#         '',
+#         url(r'^api_debug/', api_debug),
+#     )
