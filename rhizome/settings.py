@@ -106,7 +106,7 @@ DATABASES['default']['HOST'] = '/cloudsql/sudo-marketing:us-east1:notion-db'
 if os.getenv('GAE_INSTANCE'):
     pass
 else:
-    DATABASES['default']['HOST'] = '127.0.0.1'
+    DATABASES['default']['HOST'] = 'db'
 
 #
 # ## we allow for connection either KOBO or APP ENGINE aggregate backends

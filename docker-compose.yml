@@ -4,16 +4,16 @@ rhizome:
   links:
     - db:db
   expose:
-    - 8080
+    - 9090
   ports:
-    - 9090:8080
+    - 9090:9090
   volumes:
     - .:/rhizome
     - ./webapp/public/static:/static
   env_file:
     - .env
-  # working_dir: /rhizome
-  # entrypoint: /rhizome/bin/start.sh
+  working_dir: /rhizome
+  entrypoint: /rhizome/bin/start.sh
 db:
   build: db
   restart: always
