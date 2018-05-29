@@ -12,10 +12,18 @@ handlers:
 - url: /static/
   static_dir: public/static/
   login: admin
-- url: /index.html
+- url: /
   static_files: index.html
   upload: index.html
   secure: always
+# - url: /charts.html
+#   static_files: charts.html
+#   upload: index.html
+#   secure: always
+# - url: /dashboards.html
+#   static_files: dashboard.html
+#   upload: index.html
+#   secure: always
 
 env_variables:
   GAE_USE_SOCKETS_HTTPLIB: 'true'
