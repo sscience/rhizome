@@ -9,9 +9,9 @@ automatic_scaling:
   max_concurrent_requests: 10
 
 handlers:
-- url: /0.1/(.*)
-  script: main.app
-  secure: always
+- url: /static/
+  static_dir: public/static/
+  login: admin
 - url: /index.html
   static_files: index.html
   upload: index.html
@@ -25,3 +25,8 @@ libraries:
   version: '2.6'
 - name: ssl
   version: latest
+
+skip_files:
+- ^(.*/)?.*/node_modules/.*$
+- ^(node_modules/.*)
+- ^(.*/)?.*\.py[co]$
