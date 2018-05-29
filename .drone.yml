@@ -1,0 +1,41 @@
+pipeline:
+  frontend:
+    image: mhart/alpine-node:4.7.2
+    commands:
+      - cd webapp
+      - apk add --no-cache make gcc g++ python
+      - npm install gulp-cli -g --silent
+      - npm install
+      - npm cache clean
+      - gulp build
+      - echo '- BUILD DONE -'
+
+  deploy-fe:
+    environment:
+      BUILD_NUM: $$COMMIT
+      ENV_NAME: 'dev'
+    action: update
+    image: nytimes/drone-gae
+    project: &sudo-marketing-notion
+    app_file: webapp/app.yaml
+    version: abc123
+    ae_environment:
+      APP_NAME: sudo-marketing-notion
+      ENV_NAME: 'dev'
+    when:
+      event: push
+      branch: master ## simon - comment this line to deploy
+    secrets:
+      - source: sudo_marketing_notion_google_creds
+        target: gae_credentials
+
+    # gae:
+    #   image: nytimes/drone-gae
+    #   action: set_default_version
+    #   project: sudo-marketing
+    #   app_file: app.yaml
+    #   version: "$$COMMIT"
+    #   token: >
+    #     $$GOOGLE_CREDENTIALS
+    #   when:
+    #     event: push
