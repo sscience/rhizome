@@ -24,7 +24,6 @@ pipeline:
       ENV_NAME: 'dev'
     when:
       event: push
-      branch: master ## samson - comment this line to deploy
     secrets:
       - source: sudo_marketing_notion_google_creds
         target: gae_credentials
