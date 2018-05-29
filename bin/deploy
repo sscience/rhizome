@@ -1,2 +1,0 @@
-gcloud config set project sudo-marketing
-gcloud app deploy prod.yaml
