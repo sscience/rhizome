@@ -28,8 +28,7 @@ const _prepDatapointsQuery = (params) => {
     chart_uuid: params.uuid,
     group_by_time: params.group_by_time,
     filter_indicator: params.indicator_filter ? params.indicator_filter.type : null,
-    filter_value: params.indicator_filter ? params.indicator_filter.value : null,
-    location_type: params.type === 'TableChart' ? 'District' : null
+    filter_value: params.indicator_filter ? params.indicator_filter.value : null
   }
   if (params.type === 'RawData' && params.group_by_time !== 'year') {
     query.start_date = params.start_date

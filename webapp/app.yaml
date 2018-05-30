@@ -1,0 +1,40 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+service: notion-fe
+
+instance_class: F2
+automatic_scaling:
+  min_idle_instances: 0
+  max_concurrent_requests: 10
+
+handlers:
+- url: /static/
+  static_dir: public/static/
+  login: admin
+- url: /
+  static_files: index.html
+  upload: index.html
+  secure: always
+# - url: /charts.html
+#   static_files: charts.html
+#   upload: index.html
+#   secure: always
+# - url: /dashboards.html
+#   static_files: dashboard.html
+#   upload: index.html
+#   secure: always
+
+env_variables:
+  GAE_USE_SOCKETS_HTTPLIB: 'true'
+
+libraries:
+- name: pycrypto
+  version: '2.6'
+- name: ssl
+  version: latest
+
+skip_files:
+- ^(.*/)?.*/node_modules/.*$
+- ^(node_modules/.*)
+- ^(.*/)?.*\.py[co]$

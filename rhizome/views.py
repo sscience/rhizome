@@ -14,6 +14,13 @@ from rhizome.mixins import PermissionRequiredMixin
 
 from rhizome.pdf_utils import print_pdf
 
+def ok(request):
+    import json
+    from django.http import HttpResponse
+    resp_data = {'ok':'ok'}
+
+    return HttpResponse(json.dumps(resp_data), content_type="application/json")
+
 
 def about(request):
     html = settings.ABOUT_HTML

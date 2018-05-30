@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import d3 from 'd3'
+// import d3 from 'd3'
 import moment from 'moment'
 import React from 'react'
 import Reflux from 'reflux'

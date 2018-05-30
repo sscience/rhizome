@@ -5,9 +5,6 @@ import api from 'utilities/api'
 
 import LocationSelect from 'components/select/LocationSelect'
 import DropdownButton from 'components/button/DropdownButton'
-import CampaignStore from 'stores/CampaignStore'
-import LocationStore from 'stores/LocationStore'
-import IndicatorStore from 'stores/IndicatorStore'
 
 import Modal from 'react-modal'
 

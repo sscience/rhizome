@@ -12,8 +12,6 @@ import MapChart from 'components/highchart/MapChart'
 import BubbleMapChart from 'components/highchart/BubbleMapChart'
 import LineChart from 'components/highchart/LineChart'
 import ColumnChart from 'components/highchart/ColumnChart'
-import TableChart from 'components/d3chart/TableChart'
-import ChoroplethMap from 'components/d3chart/ChoroplethMap'
 
 import MultiChartControls from 'components/organisms/multi-chart/MultiChartControls'
 import MultiChartHeader from 'components/organisms/multi-chart/MultiChartHeader'
@@ -47,12 +45,13 @@ const MultiChart = React.createClass({
   },
 
   getChartComponentByType: function (type) {
-    if (type === 'TableChart') {
-      return <TableChart {...this.props.chart} />
-    } else if (type === 'LineChart') {
+    // if (type === 'TableChart') {
+    //   return <TableChart {...this.props.chart} />
+    // } else
+    if (type === 'LineChart') {
       return <LineChart {...this.props.chart} />
-    } else if (type === 'ChoroplethMap') {
-      return <ChoroplethMap {...this.props.chart} />
+    // } else if (type === 'ChoroplethMap') {
+    //   return <ChoroplethMap {...this.props.chart} />
     } else if (type === 'MapChart') {
       return <MapChart {...this.props.chart} onMapClick={this.props.primaryChartClick}/>
     } else if (type === 'ColumnChart') {

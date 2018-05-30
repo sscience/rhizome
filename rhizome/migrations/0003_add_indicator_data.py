@@ -103,10 +103,10 @@ class MetaDataGenerator:
 
         for ind in indicators:
 
-            print 'INDICATOR: {0}'.format(ind)
+            # print 'INDICATOR: {0}'.format(ind)
 
             try:
-                ind_name = self.file_map['indicator_map'][ind]
+                ind_name = ind # self.file_map['indicator_map'][ind]
                 ind_obj = Indicator.objects.create(**{
                     'name':ind_name,
                     'short_name':ind_name,

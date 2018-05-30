@@ -1,4 +1,6 @@
 #!/bin/sh
+# npm cache clear
+# npm cache clean
 gulp dev
 
 ## run this to get the container up and running..
