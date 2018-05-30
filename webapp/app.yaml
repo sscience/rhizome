@@ -10,11 +10,11 @@ automatic_scaling:
 
 handlers:
 - url: /static/
-  static_dir: public/static/
+  static_dir: webapp/public/static/
   login: admin
 - url: /
-  static_files: index.html
-  upload: index.html
+  static_files: webapp/index.html
+  upload: webapp/index.html
   secure: always
 # - url: /charts.html
 #   static_files: charts.html
