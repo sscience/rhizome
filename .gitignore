@@ -53,4 +53,5 @@ webapp/public/*
 bower_components/
 
 static
+.drone.sec.yaml
 .env
