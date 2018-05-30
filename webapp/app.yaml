@@ -9,7 +9,7 @@ automatic_scaling:
   max_concurrent_requests: 10
 
 handlers:
-- url: /static/
+- url: /public/static/
   static_dir: webapp/public/static/
   login: admin
 - url: /
