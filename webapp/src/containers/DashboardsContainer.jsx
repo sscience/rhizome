@@ -19,7 +19,7 @@ export default React.createClass({
 
   render () {
     const dashboards = this.state.dashboards.raw || []
-    let rows = <tr><td colSpan='3'>No custom dashboards created yet.</td></tr>
+    let rows = <tr><td colSpan='3'>No custom dashboards </td></tr>
     if (_.isNull(dashboards)) {
       rows = <tr><td><i className='fa fa-spinner fa-spin'></i> Loading&hellip;</td></tr>
     } else if (dashboards.length > 0) {

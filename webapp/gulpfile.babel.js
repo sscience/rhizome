@@ -18,7 +18,6 @@ gulp.config("tasks.build", {
     // 'clean', // Removed because i get this error: EBUSY: resource busy or locked, rmdir '/watcher-app/public/static'
     "copy",
     "sass",
-    "server",
     "browserify",
     "revCompile",
     "revReplace"
@@ -30,5 +29,10 @@ gulp.task("dev", () => {
   gulp.start(["build"]);
   gulp.start(["server"]);
 });
+
+gulp.task("serve", () => {
+  gulp.start(["server"]);
+});
+
 
 gulp.task("default", ["build"]);

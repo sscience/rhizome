@@ -4,6 +4,10 @@ import browserSync from "browser-sync";
 const TASK_NAME = "server";
 
 function serverOnce(fileConf) {
+  console.log('localhostFileConf:', fileConf)
+
+  var browserSyncOptions = {}
+
   browserSync(fileConf.options);
 }
 
