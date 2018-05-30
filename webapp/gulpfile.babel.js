@@ -19,7 +19,6 @@ gulp.config("tasks.build", {
     "copy",
     "sass",
     "browserify",
-    "server",
     "revCompile",
     "revReplace"
   ]
@@ -28,6 +27,7 @@ gulp.config("tasks.build", {
 gulp.task("dev", () => {
   gulp.config(gulp.DEV_MODE, true);
   gulp.start(["build"]);
+  gulp.start(["server"]);
 });
 
 gulp.task("default", ["build"]);
