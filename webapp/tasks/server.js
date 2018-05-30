@@ -1,17 +1,16 @@
-import gulp from 'gulp'
-import browserSync from 'browser-sync'
+import gulp from "gulp";
+import browserSync from "browser-sync";
 
-const TASK_NAME = 'server'
+const TASK_NAME = "server";
 
-function serverOnce (fileConf) {
-  browserSync(fileConf.options)
+function serverOnce(fileConf) {
+  browserSync(fileConf.options);
 }
 
-function server () {
+function server() {
   gulp.autoRegister(TASK_NAME, serverOnce, config => {
-    gulp.watch(config.src)
-      .on('change', browserSync.reload)
-  })
+    gulp.watch(config.src).on("change", browserSync.reload);
+  });
 }
 
-export default gulp.task(TASK_NAME, server)
+export default gulp.task(TASK_NAME, server);
