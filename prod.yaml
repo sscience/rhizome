@@ -22,13 +22,12 @@ resources:
   memory_gb: 0.5
   disk_size_gb: 10
 
-
 env_variables:
   SECRET_KEY: 'aslfksclmnslckwhjeokjqwlfkaslfkasjflakjsflamnfalskj'
-  POSTGRES_DB: ''
-  POSTGRES_USER: ''
-  POSTGRES_PASSWORD: ''
-  POSTGRES_HOST: ''
+  POSTGRES_DB: 'rhizome'
+  POSTGRES_USER: 'rhizome'
+  POSTGRES_PASSWORD: 'rhizome'
+  POSTGRES_HOST: '/cloudsql/sudo-marketing:us-east1:notion-db'
   POSTGRES_PORT: 3333
   COUNTRY_SHAPE_LIST: 'AF'
 

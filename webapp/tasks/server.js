@@ -6,7 +6,10 @@ const TASK_NAME = "server";
 function serverOnce(fileConf) {
   console.log('localhostFileConf:', fileConf)
 
-  var browserSyncOptions = {}
+  var browserSyncOptions = {
+    files: ["public/static", "public/templates"]
+  }
+
 
   browserSync(fileConf.options);
 }

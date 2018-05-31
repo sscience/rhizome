@@ -16,14 +16,14 @@ handlers:
   static_files: webapp/index.html
   upload: webapp/index.html
   secure: always
-# - url: /charts.html
-#   static_files: charts.html
-#   upload: index.html
-#   secure: always
-# - url: /dashboards.html
-#   static_files: dashboard.html
-#   upload: index.html
-#   secure: always
+- url: /charts
+  static_files: webapp/pubilc/templates/charts/index.html
+  upload: webapp/pubilc/templates/charts/index.html
+  secure: always
+- url: /dashboards
+  static_files: webapp/pubilc/templates/dashboards/index.html
+  upload: webapp/pubilc/templates/dashboards/index.html
+  secure: always
 
 env_variables:
   GAE_USE_SOCKETS_HTTPLIB: 'true'

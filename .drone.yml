@@ -18,7 +18,25 @@ pipeline:
     image: nytimes/drone-gae
     project: &sudo-marketing-notion
     app_file: webapp/app.yaml
-    version: abc123
+    version: abc123-fe
+    ae_environment:
+      APP_NAME: sudo-marketing-notion
+      ENV_NAME: 'dev'
+    when:
+      event: push
+    secrets:
+      - source: sudo_marketing_notion_google_creds
+        target: gae_credentials
+
+  deploy-be:
+    environment:
+      BUILD_NUM: $$COMMIT
+      ENV_NAME: 'dev'
+    action: update
+    image: nytimes/drone-gae
+    project: &sudo-marketing-notion
+    app_file: rhizome/app.yaml
+    version: abc123-be
     ae_environment:
       APP_NAME: sudo-marketing-notion
       ENV_NAME: 'dev'
