@@ -12,13 +12,13 @@ pipeline:
 
   deploy-fe:
     environment:
-      BUILD_NUM: COD
+      BUILD_NUM: ${DRONE_COMMIT}
       ENV_NAME: 'dev'
     action: update
     image: nytimes/drone-gae
     project: &sudo-marketing-notion
     app_file: webapp/app.yaml
-    version: COD # ${COMMIT}
+    version: ${DRONE_COMMIT}
     ae_environment:
       APP_NAME: sudo-marketing-notion
       ENV_NAME: 'dev'
