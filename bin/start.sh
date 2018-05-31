@@ -5,4 +5,4 @@
 
 ./manage.py collectstatic --noinput
 
-./manage.py runserver 0.0.0.0:9090
+./manage.py runserver 0.0.0.0:8080

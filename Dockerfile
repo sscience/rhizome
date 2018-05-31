@@ -12,4 +12,10 @@ RUN pip install --requirement /tmp/requirements.txt
 
 RUN ln -s /usr/bin/gcc-5.3.0-r0 /usr/bin/gcc
 
+COPY . '/rhizome'
+
 WORKDIR '/rhizome'
+
+EXPOSE 8080
+
+ENTRYPOINT ["gunicorn","-b",":8080","rhizome.wsgi"]

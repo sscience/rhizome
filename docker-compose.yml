@@ -3,10 +3,8 @@
 #   build: .
 #   links:
 #     - db:db
-#   expose:
-#     - 9090
 #   ports:
-#     - 9090:9090
+#     - 9090:8080
 #   volumes:
 #     - .:/rhizome
 #     - ./webapp/public/static:/static
