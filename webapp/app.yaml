@@ -13,8 +13,8 @@ handlers:
   static_dir: webapp/public/static/
   login: admin
 - url: /
-  static_files: webapp/templates/index.html
-  upload: webapp/templates/index.html
+  static_files: webapp/public/templates/index.html
+  upload: webapp/public/templates/index.html
   secure: always
 - url: /charts
   static_files: webapp/pubilc/templates/charts/index.html

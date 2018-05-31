@@ -28,7 +28,7 @@ env_variables:
   POSTGRES_USER: 'rhizome'
   POSTGRES_PASSWORD: 'rhizome'
   POSTGRES_HOST: '/cloudsql/sudo-marketing:us-east1:notion-db'
-  POSTGRES_PORT: 3333
+  POSTGRES_PORT: 5432
   COUNTRY_SHAPE_LIST: 'AF'
 
 beta_settings:
