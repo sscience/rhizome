@@ -18,7 +18,7 @@ pipeline:
     image: nytimes/drone-gae
     project: &sudo-marketing-notion
     app_file: webapp/app.yaml
-    version: abc123-fe
+    version: ${COMMIT}
     ae_environment:
       APP_NAME: sudo-marketing-notion
       ENV_NAME: 'dev'
@@ -28,31 +28,33 @@ pipeline:
       - source: sudo_marketing_notion_google_creds
         target: gae_credentials
 
-  deploy-be:
-    environment:
-      BUILD_NUM: $$COMMIT
-      ENV_NAME: 'dev'
-    action: update
-    image: nytimes/drone-gae
-    project: &sudo-marketing-notion
-    app_file: rhizome/app.yaml
-    version: abc123-be
-    ae_environment:
-      APP_NAME: sudo-marketing-notion
-      ENV_NAME: 'dev'
-    when:
-      event: push
+    fe-switch-traffic:
+      image: nytimes/drone-gae
+      action: set_default_version
+      project: sudo-marketing
+      app_file: webapp/app.yaml
+      version: ${COMMIT}
     secrets:
       - source: sudo_marketing_notion_google_creds
         target: gae_credentials
+      when:
+        event: push
 
-    # gae:
-    #   image: nytimes/drone-gae
-    #   action: set_default_version
-    #   project: sudo-marketing
-    #   app_file: app.yaml
-    #   version: "$$COMMIT"
-    #   token: >
-    #     $$GOOGLE_CREDENTIALS
-    #   when:
-    #     event: push
+
+  # deploy-be:
+  #   environment:
+  #     BUILD_NUM: $$COMMIT
+  #     ENV_NAME: 'dev'
+  #   action: update
+  #   image: nytimes/drone-gae
+  #   project: &sudo-marketing-notion
+  #   app_file: rhizome/app.yaml
+  #   version: abc123-be
+  #   ae_environment:
+  #     APP_NAME: sudo-marketing-notion
+  #     ENV_NAME: 'dev'
+  #   when:
+  #     event: push
+  #   secrets:
+  #     - source: sudo_marketing_notion_google_creds
+  #       target: gae_credentials
