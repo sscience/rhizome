@@ -9,7 +9,8 @@ requireDir("./tasks");
 gulp.config("base.root", "..");
 gulp.config("base.src", "./src");
 gulp.config("base.dist", "./public");
-gulp.config("templates", "../templates");
+// gulp.config("templates", "../templates");
+gulp.config("public", "../public");
 
 gulp.config("tasks", requireDir("./tasks/config"));
 
@@ -33,6 +34,5 @@ gulp.task("dev", () => {
 gulp.task("serve", () => {
   gulp.start(["server"]);
 });
-
 
 gulp.task("default", ["build"]);
