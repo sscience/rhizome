@@ -18,7 +18,7 @@ pipeline:
     image: nytimes/drone-gae
     project: &sudo-marketing-notion
     app_file: webapp/app.yaml
-    version: ${COMMIT}
+    version: COD # ${COMMIT}
     ae_environment:
       APP_NAME: sudo-marketing-notion
       ENV_NAME: 'dev'
@@ -27,13 +27,12 @@ pipeline:
     secrets:
       - source: sudo_marketing_notion_google_creds
         target: gae_credentials
-
     fe-switch-traffic:
       image: nytimes/drone-gae
       action: set_default_version
-      project: sudo-marketing
+      project: &sudo-marketing-notion
       app_file: webapp/app.yaml
-      version: ${COMMIT}
+      version: COD # ${COMMIT}
     secrets:
       - source: sudo_marketing_notion_google_creds
         target: gae_credentials
