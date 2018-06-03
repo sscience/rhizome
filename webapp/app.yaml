@@ -13,17 +13,18 @@ handlers:
   static_dir: webapp/public/static/
   login: admin
 - url: /charts
-  static_files: webapp/pubilc/templates/charts/index.html
+  static_files: webapp/public/templates/charts/index.html
   upload: webapp/pubilc/templates/charts/index.html
   secure: always
 - url: /dashboards
-  static_files: webapp/pubilc/templates/dashboards/index.html
+  static_files: webapp/public/templates/dashboards/index.html
   upload: webapp/pubilc/templates/dashboards/index.html
   secure: always
 - url: /
   static_files: webapp/public/templates/index.html
   upload: webapp/public/templates/index.html
   secure: always
+
 
 env_variables:
   GAE_USE_SOCKETS_HTTPLIB: 'true'
