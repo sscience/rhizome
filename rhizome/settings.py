@@ -89,24 +89,42 @@ WSGI_APPLICATION = 'rhizome.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'PORT': os.getenv('POSTGRES_PORT')
+if 1==1:  #os.getenv('SETTINGS_MODE') == 'prod':
+    # Running in development, but want to access the Google Cloud SQL instance in production.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'HOST': '127.0.0.1',
+            'PORT': '3129',
+            # 'INSTANCE': '/cloudsql/sudo-marketing:us-east1:notion-db',
+            'NAME': 'rhizome',
+            'USER': 'rhizome',
+            'PASSWORD': 'rhizome',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.getenv('POSTGRES_DB'),
+            'USER': os.getenv('POSTGRES_USER'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+            'PORT': os.getenv('POSTGRES_PORT')
+        }
+    }
+
 # In the flexible environment, you connect to CloudSQL using a unix socket.
 # Locally, you can use the CloudSQL proxy to proxy a localhost connection
 # to the instance
-DATABASES['default']['HOST'] = '/cloudsql/sudo-marketing:us-east1:notion-db'
-if os.getenv('GAE_INSTANCE'):
-    pass
-else:
-    DATABASES['default']['HOST'] = 'db'
+# DATABASES['default']['HOST'] = '/cloudsql/sudo-marketing:us-east1:notion-db'
+# if os.getenv('GAE_INSTANCE'):
+#     pass
+# else:
+#     DATABASES['default']['HOST'] = 'db'
+
+
+
+
 
 #
 # ## we allow for connection either KOBO or APP ENGINE aggregate backends

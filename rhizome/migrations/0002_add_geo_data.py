@@ -36,7 +36,8 @@ def process_geo_json():
     for the countries we specify.
     '''
 
-    for c in settings.COUNTRY_LIST:
+    country_list = ['af','ye']## settings.COUNTRY_LIST
+    for c in country_list:
         create_country_meta_data(c)
 
     minify_geo_json()
@@ -47,7 +48,14 @@ def create_country_meta_data(c):
 
      # if this file has not already been saved, fetch it from the below url
     if not os.path.isfile(json_file_name):
+
         url = 'http://code.highcharts.com/mapdata/countries/{0}/{0}-all.geo.json'.format(c)
+        print 'FETCHING URL {0}'.format(url)
+        print 'FETCHING URL {0}'.format(url)
+        print 'FETCHING URL {0}'.format(url)
+        print 'FETCHING URL {0}'.format(url)
+        print 'FETCHING URL {0}'.format(url)
+
         response = urllib2.urlopen(url)
 
         data = json.loads(response.read())
@@ -99,8 +107,12 @@ def process_geo_row(ix, row, country_loc_object, province_lt):
     except KeyError as err: # not a location since it does not have name field
         print err
 
+    loc_name = row_properties.get('name')
+    if not loc_name:
+        loc_name = row_properties.get('country')
+
     province_loc_object, created = Location.objects\
-        .get_or_create(name=row_properties['name'], defaults=province_dict)
+        .get_or_create(name=loc_name, defaults=province_dict)
 
     if not created: # high charts has dupes .. see parwan..
 

@@ -1,0 +1,1 @@
+/Users/john/cloud_sql_proxy -instances=sudo-marketing:us-east1:notion-db=tcp:3129 -credential_file=/Users/john/Downloads/sudo-marketing-6b7f486459fe.json
