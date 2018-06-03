@@ -6,6 +6,7 @@ import re
 from collections import defaultdict
 import math
 from dateutil.parser import parse
+import logging
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -206,8 +207,8 @@ class Document(models.Model):
             'document_id': self.id,
             'data_date': parse(submission_data[self.date_column]),
             'row_number': submission_ix,
-            'latitude': submission_data[self.lat_column] or 0, #FIXME make nullable in model
-            'longitude': submission_data[self.lon_column] or 0,  #FIXME make nullable in model
+            'latitude': submission_data.get(self.lat_column, 0), #FIXME make nullable in model
+            'longitude': submission_data.get(self.lon_column, 0),  #FIXME make nullable in model
             'location_code': submission_data[self.location_column],
             'instance_guid': submission_data[self.uq_id_column],
             'process_status': 'TO_PROCESS',

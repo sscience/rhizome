@@ -1,0 +1,10 @@
+uq_id,Date,Governorate,Cases,Deaths,CFR (%),Attack Rate (per 1000),COD Gov English,COD Gov Arabic,COD Gov Pcode, lat, lon
+1,2018-01-14,Amran,102231,175,0.17,88.088,Amran,عمران,29
+2,2018-01-14,Al Mahwit,61097,149,0.24,83.671,Al Mahwit,المحويت,27
+3,2018-01-14,Al Dhale'e,47132,81,0.17,64.432,Al Dhale'e,الضالع,30
+4,2018-01-14,Hajjah,118468,420,0.35,50.850,Hajjah,حجة,17
+5,2018-01-14,Sana'a,74103,123,0.17,50.398,Sana'a,صنعاء,23
+6,2018-01-14,Dhamar,99766,160,0.16,49.579,Dhamar,ذمار,20
+7,2018-01-14,Abyan,28241,35,0.12,49.473,Abyan,أبين,12
+8,2018-01-14,Al Hudaydah,150965,280,0.19,46.620,Al Hudaydah,الحديدة,18
+9,2018-01-14,Al Bayda,28730,34,0.12,37.833,Al Bayda,البيضاء,14

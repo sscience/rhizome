@@ -25,8 +25,8 @@ def populate_source_data(apps, schema_editor):
     sheet otherwise we will have foreign key constraint issues.
     '''
 
-    source_sheet_df = pd.read_csv('migration_data/yemen_data.csv', \
-        encoding = 'iso8859_6') # Arabic
+    source_sheet_df = pd.read_csv('migration_data/yemen_cholera_data_HEAD.csv', \
+        encoding = 'utf8') # Arabic
 
     source_sheet_df.drop(source_sheet_df.index[:1], inplace=True)
 
@@ -37,34 +37,39 @@ class MetaDataGenerator:
 
     def __init__(self, source_sheet_df):
 
-        self.source_sheet_df = source_sheet_df
+        self.source_sheet_df = source_sheet_df.fillna(0)
 
-        derived_date_col = 'derived-date-yyyy-mm-dd'
 
-        self.source_sheet_df[derived_date_col] = \
-            source_sheet_df['year'].map(str) + '-' + \
-            source_sheet_df['month'].map(str) + '-' + \
-            source_sheet_df['day'].map(str)
-
+        # derived_date_col = 'derived-date-yyyy-mm-dd'
+        #
+        # print '==='
+        # print self.source_sheet_df
+        # print '==='
+        #
+        #
+        # self.source_sheet_df[derived_date_col] = \
+        #     source_sheet_df['year'].map(str) + '-' + \
+        #     source_sheet_df['month'].map(str) + '-' + \
+        #     source_sheet_df['day'].map(str)
+        #
         self.file_map = {
-                'country_display': 'Afghanistan',
+                'country_display': 'Yemen',
                 'indicator_map':  {
-                        'kill_count':'Total Killed',
-                        'wounded_count':'Total Wounded'
+                        'cholera_cases':'Cases',
+                        'cholera_deaths':'Deaths'
                 },
                 'column_map': {
-                    'date_column': derived_date_col,
-                    'lat_column': 'latitude',
-                    'lon_column': 'longitude',
-                    'province_column': 'province',
-                    'district_column': 'city',
+                    'date_column': 'Date',
+                    'lat_column': 'lat',
+                    'lon_column': 'lon',
+                    'province_column': 'Governorate',
                 },
                 'admin_level_parent_lookup': {
                     'District' : 'province'
                 }
         }
-
-
+        #
+        #
         self.country_location_type, created = LocationType.objects\
             .get_or_create(name='Country', defaults={'admin_level':0})
         self.top_lvl_location, created = Location.objects\
@@ -73,14 +78,14 @@ class MetaDataGenerator:
 
         LocationType.objects\
             .get_or_create(name='Province', defaults={'admin_level': 1})
-        LocationType.objects\
-            .get_or_create(name='District', defaults={'admin_level': 2})
         # LocationType.objects\
-        #     .get_or_create(name='Settlement', defaults={'admin_level': 3})
+        #     .get_or_create(name='District', defaults={'admin_level': 2})
+        # # LocationType.objects\
+        # #     .get_or_create(name='Settlement', defaults={'admin_level': 3})
 
     def main(self):
 
-        doc_name = 'indicator_initial'
+        doc_name = 'indicator_initial_yemen'
         self.document =  Document.objects.create(doc_title=doc_name, guid=doc_name)
 
         ## creates the indicator meta
@@ -160,49 +165,6 @@ class MetaDataGenerator:
             })
             self.existing_location_map[province_name] = location_obj.id
 
-        # DISTRICT ##
-        district_column = self.file_map['column_map']['district_column']
-        district_df = pd.DataFrame(\
-            self.source_sheet_df[[district_column,province_column]])
-
-        district_df.drop_duplicates(inplace=True)
-        self.process_location_df(district_df, 'District')
-
-        # ## ADMIN 3  ##
-        # settlement_column = self.file_map['column_map']['admn_2_column']
-        # settlement_df = pd.DataFrame(\
-        #     self.source_sheet_df[[settlement_column,district_column]])
-        #
-        # settlement_df.drop_duplicates(inplace=True,subset=[settlement_column])
-        # self.process_location_df(settlement_df, 'Settlement')
-        #
-        # ## this wil lmake it so we can ingest data
-        # source_object_map_batch = [SourceObjectMap(**{
-        #     'master_object_id': loc.id,
-        #     'content_type': 'location',
-        #     'source_object_code': loc.location_code
-        # }) for loc in Location.objects.all()]
-        # # SourceObjectMap.objects.bulk_create(source_object_map_batch)
-
-        ##  now let me change the names of the locations
-        ##  so that they are familiar to the progam
-
-        # for k,v in self.location_lookup.iteritems():
-        #
-        #     try:
-        #         l = Location.objects.get(name=v)
-        #         l.name = k
-        #         l.location_code = k
-        #         l.save()
-        #     except Location.DoesNotExist:  ## LOOK INTO THIS....
-        #         pass
-
-        ## populate the location tree @
-        # ltc = LocationTreeCache()
-        # ltc.main()
-        #
-        # if len(LocationTree.objects.all()) == 0:
-        #     raise Exception('Empty Location Tree')
 
     def process_location_df(self, location_df, admin_level):
 
@@ -286,11 +248,11 @@ class MetaDataGenerator:
         ## document -> source_submissions ##
         # FiXME -- replace with "transform_upload"
 
-        self.document.location_column = self.file_map['column_map']['district_column']
+        self.document.location_column = self.file_map['column_map']['province_column']
         self.document.date_column =self.file_map['column_map']['date_column']
         self.document.lat_column =self.file_map['column_map']['lat_column']
         self.document.lon_column = self.file_map['column_map']['lon_column']
-        self.document.uq_id_column = 'event_id'
+        self.document.uq_id_column = 'uq_id'
         self.document.existing_submission_keys = []
         self.document.file_header = list(self.source_sheet_df.columns)
         self.document.csv_df = self.source_sheet_df
@@ -312,7 +274,10 @@ def create_doc_details(doc_id):
     doc_detail_types = ['uq_id_column', 'date_column', 'location_column', \
         'lat_column', 'lon_column']
 
-    for dd_type in doc_detail_types:
+    for _dd_type in doc_detail_types:
+
+
+        dd_type = 'yemen-' + _dd_type
 
         ddt = DocDetailType.objects.create(name = dd_type)
 
@@ -326,7 +291,7 @@ def create_doc_details(doc_id):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('rhizome', '0002_add_geo_data'),
+        ('rhizome', '0003_add_indicator_data'),
     ]
 
     operations = [
