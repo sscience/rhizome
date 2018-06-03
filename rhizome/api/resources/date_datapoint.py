@@ -274,10 +274,8 @@ class DateDatapointResource(BaseModelResource):
 
         time_grouped_dp_df = self.get_time_group_series(dp_df)
 
-        #
         # print '====time_grouped_dp_df==='
         # print time_grouped_dp_df[:3]
-        #
         # print '====loc_tree_df==='
         # print loc_tree_df[:3]
 
