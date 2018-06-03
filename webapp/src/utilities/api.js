@@ -1,6 +1,6 @@
 /* jshint browser: true */
 /* global Promise */
-const BASE_URL = '/api'
+const BASE_URL = 'https://notion-api-dot-sudo-marketing.appspot.com/api'
 
 import _ from 'lodash'
 import moment from 'moment'
