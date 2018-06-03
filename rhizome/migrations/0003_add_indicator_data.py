@@ -25,7 +25,7 @@ def populate_source_data(apps, schema_editor):
     sheet otherwise we will have foreign key constraint issues.
     '''
 
-    source_sheet_df = pd.read_csv('migration_data/afghanistan_gtd_cleaned_HEAD.csv', \
+    source_sheet_df = pd.read_csv('migration_data/afghanistan_gtd_cleaned.csv', \
         encoding = 'iso8859_6') # Arabic
 
     source_sheet_df.drop(source_sheet_df.index[:1], inplace=True)
