@@ -1,10 +1,49 @@
-{% extends "base.html" %}
 
-{% block scripts %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RhizomeDB</title>
+  <link rel="stylesheet" href="/public/static/css/screen.css">
+  <link rel="stylesheet" href="/public/static/css/print-redesign.css" media="print">
+</head>
+
+<body class="">
+  <header class="no-print">
+    <div class="row navigation-bar">
+
+
+      <nav class="dashboard-control">
+        <div id="dashboards-nav"></div>
+      </nav>
+    </div>
+  </header>
+
+  <div id="main" role="main">
+
+
+  </div>
+
+  <footer class="row main-footer">
+    <nav>
+      <ul class="actions inline-list">
+        <li><a href="/manage_system/users"><i class="fa fa-cog"></i>Manage System</a></li>
+        <li><a href="/source-data" ><i class="fa fa-file"></i>Source Data</a></li>
+      </ul>
+    </nav>
+  </footer>
+
+  <script src="/public/static/js/vendor.js"></script>
+  <script src="/public/static/js/main.js"></script>
+
 	<script>
-		Rhizome.ChartContainer(document.getElementById('main'), {{chart_id}});
+	Rhizome.ChartContainer(document.getElementById("main"));
 	</script>
+	<script src="/static/vendor/grouped-categories.js"></script>
+	<script src="/static/vendor/custom-events.js"></script>
 
-  <script src="/static/vendor/grouped-categories.js"></script>
-  <script src="/static/vendor/custom-events.js"></script>
-{% endblock %}
+</body>
+</html>

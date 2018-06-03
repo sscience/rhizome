@@ -16,6 +16,10 @@ handlers:
   static_files: webapp/public/templates/charts/index.html
   upload: webapp/public/templates/charts/index.html
   secure: always
+- url: /charts/create
+  static_files: webapp/public/templates/charts/create.html
+  upload: webapp/public/templates/charts/create.html
+  secure: always
 - url: /dashboards
   static_files: webapp/public/templates/dashboards/index.html
   upload: webapp/public/templates/dashboards/index.html
