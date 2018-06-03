@@ -1,3 +1,5 @@
+
+import logging
 from tastypie import fields
 from tastypie.resources import ALL
 from pandas import DataFrame
@@ -223,6 +225,11 @@ class DateDatapointResource(BaseModelResource):
                     on each district
         '''
 
+        logging.warning('[group_by_time_transform] - location_id %s',
+            self.location_id)
+        logging.warning('[group_by_time_transform] - location_depth %s',
+            self.location_depth)
+
         if self.location_ids:
             return self.handle_discrete_location_request()
 
@@ -233,6 +240,9 @@ class DateDatapointResource(BaseModelResource):
                 lvl = self.location_depth
             ).values_list('location_id', flat=True)
 
+            print '===--==='
+            print self.location_ids
+            print '===--==='
             # ## this is a hack to deal with this ticket ##
             # # https://trello.com/c/No82UpGl
             if len(self.location_ids) == 0:
@@ -244,9 +254,9 @@ class DateDatapointResource(BaseModelResource):
                 parent_location_id = self.location_ids,
             ).values_list(*loc_tree_df_columns)),columns = loc_tree_df_columns)
 
-            print '==-loc_tree_df-=='
-            print loc_tree_df[:5]
-            print '==-loc_tree_df-=='
+            print '===-loc_tree_df-==='
+            print loc_tree_df
+            print '===-loc_tree_df-==='
 
             dp_loc_ids = [self.location_id]
             if self.location_depth > 0:
@@ -259,23 +269,22 @@ class DateDatapointResource(BaseModelResource):
                     data_date__lte = self.end_date
                 ).values(*self.dp_df_columns)), columns=self.dp_df_columns)
 
-            print '==-dp_df-=='
-            print dp_df[:5]
-            print '==-dp_df-=='
-
         if len(dp_df) == 0:
             return []
 
         time_grouped_dp_df = self.get_time_group_series(dp_df)
 
-        print '=time_grouped_dp_df=\n' * 5
-        print time_grouped_dp_df[:5]
-        print '=time_grouped_dp_df=\n' * 5
+        #
+        # print '====time_grouped_dp_df==='
+        # print time_grouped_dp_df[:3]
+        #
+        # print '====loc_tree_df==='
+        # print loc_tree_df[:3]
 
         merged_df = time_grouped_dp_df.merge(loc_tree_df)
 
-        print '==merged_df=\n' * 5
-        print merged_df[:5]
+        # print '====merged_df==='
+        # print merged_df[:3]
 
         ## sum all values for locations with the same parent location
         gb_df = DataFrame(merged_df
@@ -283,15 +292,18 @@ class DateDatapointResource(BaseModelResource):
               .sum())\
               .reset_index()
 
+        print '=gb_df'
+        print gb_df[:3]
 
         gb_df = gb_df.rename(columns={
             'parent_location_id': 'location_id',
             })
 
         gb_df = gb_df.rename(columns={'parent_location_id': 'location_id'})
-        gb_df = gb_df.sort(['time_grouping'], ascending=[1])
 
-        print '==gp_df=\n' * 5
-        print gb_df[:5]
+        print '==-gb_df -=='
+        print gb_df[:2]
+
+        # gb_df = gb_df.sort(['time_grouping'], ascending=[1])
 
         return gb_df
