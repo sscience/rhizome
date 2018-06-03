@@ -24,6 +24,10 @@ handlers:
   static_files: webapp/public/templates/dashboards/index.html
   upload: webapp/public/templates/dashboards/index.html
   secure: always
+- url: /dashboards/create
+  static_files: webapp/public/templates/dashboards/create.html
+  upload: webapp/public/templates/dashboards/create.html
+  secure: always
 - url: /
   static_files: webapp/public/templates/index.html
   upload: webapp/public/templates/index.html
