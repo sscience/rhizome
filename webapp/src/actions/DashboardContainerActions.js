@@ -23,7 +23,7 @@ const DashboardContainerActions = Reflux.createActions({
 // ---------------------------------------------------------------------------
 DashboardContainerActions.fetchDashboard.listenAndPromise(dashboard_id => {
   const fetch = api.endPoint('/custom_dashboard/' + dashboard_id, 'GET', 1)
-  return fetch(null, null, {'cache-control': 'no-cache'})
+  return fetch(null, null)
 })
 
 export default DashboardContainerActions

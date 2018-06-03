@@ -36,7 +36,7 @@ var MapForm = React.createClass({
   },
 
   openModal: function () {
-    api.get_source_object_map({id: this.props.source_object_map_id}, null, {'cache-control': 'no-cache'})
+    api.get_source_object_map({id: this.props.source_object_map_id}, null, )
       .then(response => {
         this.setState(
           {

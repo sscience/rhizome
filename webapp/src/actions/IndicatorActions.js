@@ -8,11 +8,13 @@ const IndicatorActions = Reflux.createActions({
 })
 
 IndicatorActions.fetchIndicators.listenAndPromise(() => {
-  return api.indicators(null, null, { 'cache-control': 'no-cache' })
+  // return api.indicators(null, null, { 'cache-control': 'no-cache' })
+  return api.indicators(null, null)
 })
 
 IndicatorActions.fetchIndicatorTags.listenAndPromise(() => {
-  return api.get_indicator_tag(null, null, { 'cache-control': 'no-cache' })
+  // return api.get_indicator_tag(null, null, { 'cache-control': 'no-cache' })
+  return api.get_indicator_tag(null, null)
 })
 
 IndicatorActions.fetchIndicatorsToTags.listenAndPromise(() => api.indicator_to_tag())

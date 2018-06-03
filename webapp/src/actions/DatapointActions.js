@@ -14,7 +14,7 @@ DatapointActions.fetchDatapoints.listen(params => {
   const namespace = '/date_datapoint/' // lebanon instance dosnt use campaign
   const fetch = api.endPoint(namespace)
   DatapointActions.fetchDatapoints.promise(
-    fetch(query, null, {'cache-control': 'no-cache'})
+    fetch(query, null, )
   )
 })
 

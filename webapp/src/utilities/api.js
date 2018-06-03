@@ -152,7 +152,7 @@ function endPoint (path, mode, defaultVersion, useDefaults) {
 function submissionDownload (document_id) {
   var fetch = endPoint('/source_submission/', null, null, true)
   return new Promise(function (fulfill, reject) {
-    fetch({'document_id': document_id, 'format': 'csv'}, null, {'cache-control': 'no-cache'}).then(function (data) {
+    fetch({'document_id': document_id, 'format': 'csv'}, null).then(function (data) {
       fulfill(data)
     }, reject)
   })
@@ -163,7 +163,7 @@ function datapoint (q) {
 
   return new Promise(function (fulfill, reject) {
     // needs to be cleaned up -- previously this method called the campaign api
-    fetch(q, null, {'cache-control': 'no-cache'}).then(function (data) {
+    fetch(q, null).then(function (data) {
       var campaignData = data.meta.campaign_list
       var campaignIx = _.indexBy(campaignData, 'id')
       for (var i = data.objects.length - 1; i >= 0; --i) {
@@ -325,8 +325,8 @@ function indicatorsTree (q) {
   var fetch1 = endPoint('/indicator/', 'get', 1)
   var fetch2 = endPoint('/indicator_tag/', 'get', 1)
   return new Promise(function (fulfill, reject) {
-    fetch1(q, null, {'cache-control': 'no-cache'}).then(function (indicators) {
-      fetch2(null, null, {'cache-control': 'no-cache'}).then(function (tags) {
+    fetch1(q, null).then(function (indicators) {
+      fetch2(null, null).then(function (tags) {
         let tree = buildIndicatorsTree(indicators.objects, tags.objects, false, true)
         tags.rawTags = tags.objects
         tags.objects = tree
@@ -360,7 +360,7 @@ function docMapped (q) {
   var fetch = endPoint('/source_object_map/')
   q['is_mapped'] = 1
   return new Promise(function (fulfill, reject) {
-    fetch(q, null, {'cache-control': 'no-cache'}).then(function (data) {
+    fetch(q, null).then(function (data) {
       fulfill(data)
     }, reject)
   })
@@ -370,7 +370,7 @@ function docToMap (q) {
   var fetch = endPoint('/source_object_map/')
   q['is_mapped'] = 0
   return new Promise(function (fulfill, reject) {
-    fetch(q, null, {'cache-control': 'no-cache'}).then(function (data) {
+    fetch(q, null).then(function (data) {
       fulfill(data)
     }, reject)
   })

@@ -44,7 +44,7 @@ let CampaignPageStore = Reflux.createStore({
       api.tagTree(),
       api.get_indicator_tag(),
       api.campaign_type(),
-      id ? api.campaign({'id__in': id}, null, {'cache-control': 'no-cache'}) : []
+      id ? api.campaign({'id__in': id}, null) : []
     ]).then(_.spread(function (locations, indicatorToTags, allTags, campaignTypes, campaign) {
       self.data.isLoaded = true
       var currentCampaign = campaign.objects ? campaign.objects[0] : null

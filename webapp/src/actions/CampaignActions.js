@@ -6,7 +6,7 @@ const CampaignActions = Reflux.createActions({
 })
 
 CampaignActions.fetchCampaigns.listenAndPromise(() => {
-  return api.campaign(null, null, {'cache-control': 'no-cache'})
+  return api.campaign(null, null)
 })
 
 export default CampaignActions
