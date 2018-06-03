@@ -110,12 +110,6 @@ class LocationTreeCache(object):
                               columns= df_columns)
         location_df['lvl'] = 1 # since this is a direct parent child relation
 
-
-        print location_df
-        print '==='
-        print self.location_tree_df
-        print '==='
-
         merged_df = location_df.merge(self.location_tree_df\
                         ,left_on='location_id'\
                         ,right_on='parent_location_id')

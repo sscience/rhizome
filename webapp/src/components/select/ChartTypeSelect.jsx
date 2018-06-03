@@ -19,7 +19,7 @@ class ChartTypeSelect extends Component {
       return (
         <div key={chart.name} className={'chart-box-wrapper ' + (chart.name === this.props.selected ? 'active' : '')}>
           <div className='chart-box' onClick={this.props.onChange.bind(null, chart.name)}>
-            <img className='chart-icon' src={'/static/img/chart-icons/' + chart.name + '.png'} />
+            <img className='chart-icon' src={'/public/static/img/chart-icons/' + chart.name + '.png'} />
             <p>{chart.name}</p>
           </div>
         </div>

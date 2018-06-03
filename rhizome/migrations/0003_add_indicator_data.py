@@ -198,11 +198,11 @@ class MetaDataGenerator:
         #         pass
 
         ## populate the location tree @
-        ltc = LocationTreeCache()
-        ltc.main()
-
-        if len(LocationTree.objects.all()) == 0:
-            raise Exception('Empty Location Tree')
+        # ltc = LocationTreeCache()
+        # ltc.main()
+        #
+        # if len(LocationTree.objects.all()) == 0:
+        #     raise Exception('Empty Location Tree')
 
     def process_location_df(self, location_df, admin_level):
 
