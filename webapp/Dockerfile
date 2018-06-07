@@ -1,6 +1,8 @@
-FROM node:6
+FROM mhart/alpine-node:4.7.2
 
 RUN mkdir /watcher-app
+
+RUN apk add --no-cache make gcc g++ python
 
 RUN npm install gulp-cli -g --silent
 
