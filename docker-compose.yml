@@ -1,36 +1,35 @@
-# rhizome:
-#   restart: always
-#   build: .
-#   links:
-#     - db:db
-#   expose:
-#     - 9090
-#   ports:
-#     - 9090:9090
-#   volumes:
-#     - .:/rhizome
-#     - ./webapp/public/static:/static
-#   env_file:
-#     - .env
-#   working_dir: /rhizome
-#   entrypoint: /rhizome/bin/start.sh
-# db:
-#   build: db
-#   restart: always
-#   expose:
-#     - 5432
-#   ports:
-#     - 5432:5432
-#   hostname: psqlserver
-#   env_file:
-#     - .env
+rhizome:
+  restart: always
+  build: .
+  links:
+    - db:db
+  expose:
+    - 9090
+  ports:
+    - 9090:9090
+  volumes:
+    - .:/rhizome
+    - ./webapp/public/static:/static
+  env_file:
+    - .env
+  working_dir: /rhizome
+  entrypoint: /rhizome/bin/start.sh
+db:
+  build: db
+  restart: always
+  expose:
+    - 5432
+  ports:
+    - 5432:5432
+  hostname: psqlserver
+  env_file:
+    - .env
 fe:
   restart: always
   build: webapp
   volumes:
     - ./webapp:/code
     - ./webapp/src:/watcher-app/src
-    - ./webapp/public/static:/watcher-app/public/static
     - ./webapp/gulpfile.babel.js:/watcher-app/gulpfile.babel.js
   working_dir: /watcher-app
   env_file:
