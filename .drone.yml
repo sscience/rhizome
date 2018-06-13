@@ -8,7 +8,7 @@ pipeline:
       - npm install
       - npm cache clean
       - gulp build
-      - echo '- BUILD DONE -'
+      - echo '- BUILD DONE -',
    slack:
     image: plugins/slack
     webhook: https://hooks.slack.com/services/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
