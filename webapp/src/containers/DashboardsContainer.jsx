@@ -29,7 +29,7 @@ export default React.createClass({
             <td>
               <a href={'/dashboards/' + dashboard.id + '/'}>{dashboard.title} </a>
             </td>
-            <td>
+            <td key={dashboard.id}>
               <a onClick={() => this.deleteDashboard(dashboard.id) }>
                 <i className='fa fa-trash'></i> Delete
               </a>
