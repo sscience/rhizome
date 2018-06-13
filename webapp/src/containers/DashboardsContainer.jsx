@@ -43,7 +43,7 @@ export default React.createClass({
       <div className='row'>
         <div className='medium-3 columns'>&nbsp;</div>
         <div className='medium-6 columns'>
-          <h5 className='all-dashboard'>All Dashboards</h5>
+          <h5 className='all-dashboard'>All Dashboards!!!</h5>
           <table>
             <thead>
               <tr>

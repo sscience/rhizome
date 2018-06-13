@@ -9,17 +9,17 @@ pipeline:
       - npm cache clean
       - gulp build
       - echo '- BUILD DONE -'
-   notify:
-     image: plugins/slack
-     webhook: https://hooks.slack.com/services/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
-     channel: testing
-     username: drone
-   template: >
-    {{#success build.status}}
-      build {{build.number}} succeeded. Good job.
-    {{else}}
-      build {{build.number}} failed. Fix me please.
-    {{/success}}
+   slack:
+    image: plugins/slack
+    webhook: https://hooks.slack.com/services/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
+    channel: notion
+    username: drone
+    template: >
+      {{#success build.status}}
+        build {{build.number}} succeeded. Good job.
+      {{else}}
+        build {{build.number}} failed. Fix me please.
+      {{/success}}
 
   deploy-fe:
     environment:
