@@ -29,7 +29,7 @@ fe:
   build: webapp
   volumes:
     - ./webapp:/code
-    - ./webapp/src:/watcher-app/src
+    - ./webapp/src:/watcher-app/src/
     - ./webapp/gulpfile.babel.js:/watcher-app/gulpfile.babel.js
   working_dir: /watcher-app
   env_file:

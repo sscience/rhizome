@@ -31,7 +31,7 @@ pipeline:
   notify:
     image: plugins/slack
     webhook: https://hooks.slack.com/services/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
-    recepient: syuwono
+    recepient: notion
     username: drone
     template: >
       {{#success build.status}}

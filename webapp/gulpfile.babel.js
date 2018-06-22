@@ -15,7 +15,7 @@ gulp.config('tasks', requireDir('./tasks/config'))
 
 gulp.config('tasks.build', {
   taskQueue: [
-    'clean', // Removed because i get this error: EBUSY: resource busy or locked, rmdir '/watcher-app/public/static'
+    'clean',
     'copy',
     'sass',
     'browserify',
@@ -28,5 +28,8 @@ gulp.task('dev', () => {
   gulp.config(gulp.DEV_MODE, true)
   gulp.start(['build'])
 })
+
+
+
 
 gulp.task('default', ['build'])
